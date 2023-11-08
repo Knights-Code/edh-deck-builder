@@ -45,6 +45,7 @@ namespace EdhDeckBuilder.Tests
             var image = _cardProvider.DownloadImageForCard(cardModel);
 
             Assert.NotNull(image);
+            Assert.NotNull(cardModel.CardImage);
         }
     }
 }

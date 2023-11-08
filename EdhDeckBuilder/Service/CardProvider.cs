@@ -111,6 +111,8 @@ namespace EdhDeckBuilder.Service
                 image = Image.FromStream(memoryStream);
             }
 
+            cardModel.CardImage = image;
+
             return image;
         }
     }
