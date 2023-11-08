@@ -1,4 +1,5 @@
-﻿using EdhDeckBuilder.Service;
+﻿using EdhDeckBuilder.Model;
+using EdhDeckBuilder.Service;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -12,22 +13,38 @@ namespace EdhDeckBuilder.Tests
     [TestFixture]
     public class CardProviderTests
     {
-        [Test]
-        public void EndToEnd()
+        private CardProvider _cardProvider;
+
+        [SetUp]
+        public void SetUp()
         {
+            _cardProvider = new CardProvider();
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var cardProvider = new CardProvider();
-            cardProvider.Initialise();
             Console.WriteLine("Initialising database...");
+            _cardProvider.Initialise();
             stopwatch.Stop();
             Console.WriteLine($"Database initialisation complete ({stopwatch.ElapsedMilliseconds} ms)");
-            var card = cardProvider.TryGetCard("Ancestor's Chosen");
+        }
+
+        [Test]
+        public void TryGetCardTest()
+        {
+            var card = _cardProvider.TryGetCard("Ancestor's Chosen");
             var cardImageUrl = card.BuildGathererUrl();
             Console.WriteLine($"Gatherer URL: {cardImageUrl}");
 
-            Assert.That(card != null);
+            Assert.NotNull(card);
             Assert.AreEqual("https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=130550&type=card", cardImageUrl);
+        }
+
+        [Test]
+        public void DownloadImageForCardTest()
+        {
+            var cardModel = new CardModel { MultiverseId = "130550" };
+            var image = _cardProvider.DownloadImageForCard(cardModel);
+
+            Assert.NotNull(image);
         }
     }
 }
