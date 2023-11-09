@@ -1,0 +1,29 @@
+﻿<Window x:Class="TestHarness.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TestHarness"
+        xmlns:edhdeckbuilder="clr-namespace:EdhDeckBuilder;assembly=EdhDeckBuilder"
+        mc:Ignorable="d"
+        Title="Test Harness" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" Text="{Binding NewCardName, UpdateSourceTrigger=PropertyChanged}" >
+                <TextBox.InputBindings>
+                    <KeyBinding Command="{Binding NewCardEnterCommand}" Key="Return" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <ListBox Grid.Row="1" ItemsSource="{Binding Cards}" SelectedItem="{Binding SelectedCard}"/>
+        </Grid>
+        <edhdeckbuilder:CardView DataContext="{Binding SelectedCard}" Grid.Column="1"/>
+    </Grid>
+</Window>
