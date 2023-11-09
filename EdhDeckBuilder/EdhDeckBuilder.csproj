@@ -70,6 +70,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Model\RoleModel.cs" />
+    <Compile Include="Tests\RoleModelTests.cs" />
     <Compile Include="View\CardView.xaml.cs">
       <DependentUpon>CardView.xaml</DependentUpon>
     </Compile>
