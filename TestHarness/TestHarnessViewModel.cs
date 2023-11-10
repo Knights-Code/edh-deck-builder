@@ -15,6 +15,14 @@ namespace TestHarness
     {
         private CardProvider _cardProvider;
 
+        private DeckBuilderViewModel _deckBuilderVm;
+        public DeckBuilderViewModel DeckBuilderVm
+        {
+            get { return _deckBuilderVm; }
+            set { SetProperty(ref _deckBuilderVm, value); }
+        }
+
+
         private ObservableCollection<CardViewModel> _cards = new ObservableCollection<CardViewModel>();
         public ObservableCollection<CardViewModel> Cards
         {
@@ -41,6 +49,7 @@ namespace TestHarness
         public TestHarnessViewModel()
         {
             NewCardEnterCommand = new DelegateCommand(AddNewCard, () => !string.IsNullOrEmpty(NewCardName));
+            DeckBuilderVm = new DeckBuilderViewModel();
 
             _cardProvider = new CardProvider();
             _cardProvider.Initialise();
@@ -48,18 +57,19 @@ namespace TestHarness
 
         public void AddNewCard()
         {
-            var cardModel = _cardProvider.TryGetCard(NewCardName);
-
-            if (cardModel == null) return;
-
-            var cardVm = new CardViewModel(cardModel);
-
-            if (cardVm.CardImage == null)
-            {
-                cardVm.CardImage = _cardProvider.DownloadImageForCard(cardModel);
-            }
-
-            Cards.Add(cardVm);
+            DeckBuilderVm.AddCard(NewCardName);
+            // var cardModel = _cardProvider.TryGetCard(NewCardName);
+            // 
+            // if (cardModel == null) return;
+            // 
+            // var cardVm = new CardViewModel(cardModel);
+            // 
+            // if (cardVm.CardImage == null)
+            // {
+            //     cardVm.CardImage = _cardProvider.DownloadImageForCard(cardModel);
+            // }
+            // 
+            // Cards.Add(cardVm);
         }
     }
 }

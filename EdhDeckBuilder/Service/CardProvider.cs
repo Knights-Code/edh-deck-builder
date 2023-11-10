@@ -16,6 +16,7 @@ namespace EdhDeckBuilder.Service
     /// </summary>
     public class CardProvider
     {
+        private bool _initialised = false;
         private readonly Dictionary<string, CardModel> _cards;
         public CardProvider()
         {
@@ -80,10 +81,14 @@ namespace EdhDeckBuilder.Service
                     _cards[nameAsKey] = new CardModel { Name = name, CardImage = null, MultiverseId = multiverseIdsByUuid[uuid] };
                 }
             }
+
+            _initialised = true;
         }
 
         public CardModel TryGetCard(string name)
         {
+            if (!_initialised) Initialise();
+
             var nameAsKey = name.ToLower();
 
             if (!_cards.ContainsKey(nameAsKey)) return null;

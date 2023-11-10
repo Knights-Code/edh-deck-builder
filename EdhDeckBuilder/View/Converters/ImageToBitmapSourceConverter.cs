@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 
-namespace EdhDeckBuilder.View
+namespace EdhDeckBuilder.View.Converters
 {
     [ValueConversion(typeof(Image), typeof(BitmapSource))]
     public class ImageToBitmapSourceConverter : IValueConverter

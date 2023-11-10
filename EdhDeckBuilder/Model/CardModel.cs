@@ -9,11 +9,16 @@ namespace EdhDeckBuilder.Model
 {
     public class CardModel
     {
-        public string Name { get; set; } // Might not need to store this...
-
+        public string Name { get; set; }
         public string MultiverseId { get; set; }
-
         public Image CardImage { get; set; } = null;
+        public int NumCopies { get; set; }
+        public List<RoleModel> Roles { get; set; }
+
+        public CardModel()
+        {
+            Roles = new List<RoleModel>();
+        }
 
         public string BuildGathererUrl()
         {

@@ -5,14 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TestHarness"
         xmlns:edhdeckbuilder="clr-namespace:EdhDeckBuilder;assembly=EdhDeckBuilder"
+        xmlns:view="clr-namespace:EdhDeckBuilder.View;assembly=EdhDeckBuilder"
         mc:Ignorable="d"
         Title="Test Harness" Height="450" Width="800">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="2*"/>
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -22,8 +18,6 @@
                     <KeyBinding Command="{Binding NewCardEnterCommand}" Key="Return" />
                 </TextBox.InputBindings>
             </TextBox>
-            <ListBox Grid.Row="1" ItemsSource="{Binding Cards}" SelectedItem="{Binding SelectedCard}"/>
-        </Grid>
-        <edhdeckbuilder:CardView DataContext="{Binding SelectedCard}" Grid.Column="1"/>
+        <view:DeckBuilderView Grid.Row="1" DataContext="{Binding DeckBuilderVm}"/>
     </Grid>
 </Window>
