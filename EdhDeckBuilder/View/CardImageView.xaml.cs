@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EdhDeckBuilder.View
+namespace EdhDeckBuilder
 {
     /// <summary>
     /// Interaction logic for CardView.xaml

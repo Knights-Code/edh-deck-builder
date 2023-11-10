@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace EdhDeckBuilder.View
 {
     /// <summary>
-    /// Interaction logic for CardView.xaml
+    /// Interaction logic for DeckBuilderView.xaml
     /// </summary>
-    public partial class CardView : UserControl
+    public partial class DeckBuilderView : UserControl
     {
-        public CardView()
+        public DeckBuilderView()
         {
             InitializeComponent();
         }
