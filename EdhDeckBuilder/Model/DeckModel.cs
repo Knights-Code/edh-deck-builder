@@ -12,5 +12,15 @@ namespace EdhDeckBuilder.Model
         public List<CardModel> Cards { get; private set; }
         public List<string> CustomRoles { get; private set; }
 
+        public DeckModel(string name)
+        {
+            Name = name;
+            Cards = new List<CardModel>();
+        }
+
+        public void AddCards(ICollection<CardModel> cards)
+        {
+            Cards.AddRange(cards);
+        }
     }
 }

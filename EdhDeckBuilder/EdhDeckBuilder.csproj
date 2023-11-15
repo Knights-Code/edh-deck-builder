@@ -73,7 +73,9 @@
     <Compile Include="Model\DeckModel.cs" />
     <Compile Include="Model\RoleModel.cs" />
     <Compile Include="Model\TemplateModel.cs" />
+    <Compile Include="Service\DeckProvider.cs" />
     <Compile Include="Service\TemplatesAndDefaults.cs" />
+    <Compile Include="Tests\Model\DeckProviderTests.cs" />
     <Compile Include="Tests\Model\RoleModelTests.cs" />
     <Compile Include="Tests\Model\TemplateModelTests.cs" />
     <Compile Include="Tests\ViewModel\CardViewModelTests.cs" />
