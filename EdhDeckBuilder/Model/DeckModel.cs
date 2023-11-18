@@ -18,7 +18,7 @@ namespace EdhDeckBuilder.Model
             Cards = new List<CardModel>();
         }
 
-        public void AddCards(ICollection<CardModel> cards)
+        public void AddCards(IEnumerable<CardModel> cards)
         {
             Cards.AddRange(cards);
         }

@@ -1,18 +1,28 @@
-﻿using EdhDeckBuilder.Service;
+﻿using EdhDeckBuilder.Model;
+using EdhDeckBuilder.Service;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EdhDeckBuilder.ViewModel
 {
     public class DeckBuilderViewModel : ViewModelBase
     {
         private CardProvider _cardProvider;
+        private DeckProvider _deckProvider;
         private Dictionary<string, int> _lastNumCopiesForCard = new Dictionary<string, int>();
+
+        private string _defaultDeckName = "Untitled Deck";
+
+        private string _name;
+        public string Name
+        {
+            get { return _name; }
+            set { SetProperty(ref _name, value); }
+        }
 
         private ObservableCollection<CardViewModel> _cardVms = new ObservableCollection<CardViewModel>();
         public ObservableCollection<CardViewModel> CardVms
@@ -32,12 +42,21 @@ namespace EdhDeckBuilder.ViewModel
 
         public int TotalCards => CalculateTotalCards();
 
+        public DeckBuilderViewModel()
+        {
+            _cardProvider = new CardProvider();
+            _deckProvider = new DeckProvider();
+
+            // TODO: If available, load templates from CSV database instead.
+            SetUpDefaultTemplateAndRoles();
+        }
+
         private int CalculateTotalCards()
         {
             return CardVms.Sum(vm => vm.NumCopies);
         }
 
-        public void AddCard(string cardName)
+        public void AddCard(string cardName, int numCopies = 1)
         {
             if (CardVms.Any(vm => vm.Name == cardName)) return; // Don't add dupes.
 
@@ -45,6 +64,7 @@ namespace EdhDeckBuilder.ViewModel
 
             if (cardModel == null) return;
 
+            cardModel.NumCopies = numCopies;
             var cardVm = new CardViewModel(cardModel);
 
             // TODO: Temporarily disabled while working on other things.
@@ -61,6 +81,15 @@ namespace EdhDeckBuilder.ViewModel
             RaisePropertyChanged(nameof(TotalCards));
         }
 
+        public void NewDeck()
+        {
+            // TODO: Check for unsaved changes.
+            // Clear card list.
+            CardVms.Clear();
+            // Reset deck name.
+            Name = _defaultDeckName;
+        }
+
         private void CardVm_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
@@ -72,6 +101,71 @@ namespace EdhDeckBuilder.ViewModel
                     var cardVm = sender as CardViewModel;
                     UpdateRoleHeaders(cardVm);
                     break;
+            }
+        }
+
+        public void SaveDeck()
+        {
+            // Check if we have a file path set already.
+            // If not, prompt user for one.
+            if (string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
+            {
+                PromptUserForSaveDestination();
+                
+                // If we still don't have a file path, the user canceled
+                // the op. Bail out.
+                if (string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
+                {
+                    return;
+                }
+            }
+
+            // We have a file path at this point. Convert the vm and save the file.
+            var deckModel = ToModel();
+            _deckProvider.SaveDeck(deckModel, SettingsProvider.DeckFilePath());
+        }
+
+        public void OpenDeck()
+        {
+            // TODO: Check for unsaved changes.
+            // Prompt for csv file.
+            var openDialog = new CommonOpenFileDialog
+            {
+                Title = "Open",
+            };
+            openDialog.Filters.Add(new CommonFileDialogFilter("Comma Separated Values", "*.csv"));
+
+            if (openDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                var deckModel = _deckProvider.LoadDeck(openDialog.FileName);
+
+                // Set name.
+                Name = deckModel.Name;
+
+                // Add cards.
+                foreach (var cardModel in deckModel.Cards)
+                {
+                    AddCard(cardModel.Name, cardModel.NumCopies);
+                }
+
+                // Update deck file path for saving.
+                SettingsProvider.UpdateDeckFilePath(openDialog.FileName);
+            }
+        }
+
+        private void PromptUserForSaveDestination()
+        {
+            var fileDialog = new CommonSaveFileDialog
+            {
+                Title = "Save As",
+                DefaultExtension = ".csv",
+                AlwaysAppendDefaultExtension = true
+            };
+            fileDialog.Filters.Add(new CommonFileDialogFilter("Comma Separated Values", "*.csv"));
+
+            if (fileDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                SettingsProvider.UpdateDeckFilePath(fileDialog.FileName);
             }
         }
 
@@ -107,14 +201,6 @@ namespace EdhDeckBuilder.ViewModel
             // it should be fine. ... I think.
         }
 
-        public DeckBuilderViewModel()
-        {
-            _cardProvider = new CardProvider();
-
-            // TODO: If available, load templates from CSV database instead.
-            SetUpDefaultTemplateAndRoles();
-        }
-
         private void SetUpDefaultTemplateAndRoles()
         {
             foreach (var templateModel in TemplatesAndDefaults.DefaultTemplates())
@@ -137,6 +223,16 @@ namespace EdhDeckBuilder.ViewModel
                     TemplateVms.First(vm => vm.Role == roleVm.Name).Current += 1;
                 }
             }
+        }
+
+        public DeckModel ToModel()
+        {
+            var deckName = string.IsNullOrEmpty(_name) ? _defaultDeckName : _name;
+            var result = new DeckModel(deckName);
+
+            result.AddCards(CardVms.Select(cardVm => cardVm.ToModel()));
+
+            return result;
         }
     }
 }

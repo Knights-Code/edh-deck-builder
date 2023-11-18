@@ -44,32 +44,49 @@ namespace TestHarness
             set { SetProperty(ref _newCardName, value); }
         }
 
+        #region Menu Commands
+        public ICommand NewDeckCommand { get; set; }
+        public ICommand SaveDeckCommand { get; set; }
+        public ICommand SaveDeckAsCommand { get; set; }
+        public ICommand OpenDeckCommand { get; set; }
+        #endregion
+
         public ICommand NewCardEnterCommand { get; set; }
 
         public TestHarnessViewModel()
         {
             NewCardEnterCommand = new DelegateCommand(AddNewCard, () => !string.IsNullOrEmpty(NewCardName));
+
+            // Menu Commands //
+            // TODO: New Deck
+            NewDeckCommand = new DelegateCommand(NewDeck);
+            SaveDeckCommand = new DelegateCommand(SaveDeck);
+            // TODO: Save Deck As
+            OpenDeckCommand = new DelegateCommand(OpenDeck);
             DeckBuilderVm = new DeckBuilderViewModel();
 
             _cardProvider = new CardProvider();
             _cardProvider.Initialise();
         }
 
+        public void NewDeck()
+        {
+            DeckBuilderVm.NewDeck();
+        }
+
+        public void SaveDeck()
+        {
+            DeckBuilderVm.SaveDeck();
+        }
+
+        public void OpenDeck()
+        {
+            DeckBuilderVm.OpenDeck();
+        }
+
         public void AddNewCard()
         {
             DeckBuilderVm.AddCard(NewCardName);
-            // var cardModel = _cardProvider.TryGetCard(NewCardName);
-            // 
-            // if (cardModel == null) return;
-            // 
-            // var cardVm = new CardViewModel(cardModel);
-            // 
-            // if (cardVm.CardImage == null)
-            // {
-            //     cardVm.CardImage = _cardProvider.DownloadImageForCard(cardModel);
-            // }
-            // 
-            // Cards.Add(cardVm);
         }
     }
 }
