@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 
 namespace EdhDeckBuilder.ViewModel
 {
@@ -13,6 +14,7 @@ namespace EdhDeckBuilder.ViewModel
     {
         private CardProvider _cardProvider;
         private DeckProvider _deckProvider;
+        private RoleProvider _roleProvider;
         private Dictionary<string, int> _lastNumCopiesForCard = new Dictionary<string, int>();
 
         private string _defaultDeckName = "Untitled Deck";
@@ -46,6 +48,7 @@ namespace EdhDeckBuilder.ViewModel
         {
             _cardProvider = new CardProvider();
             _deckProvider = new DeckProvider();
+            _roleProvider = new RoleProvider();
 
             // TODO: If available, load templates from CSV database instead.
             SetUpDefaultTemplateAndRoles();
@@ -63,6 +66,14 @@ namespace EdhDeckBuilder.ViewModel
             var cardModel = _cardProvider.TryGetCard(cardName);
 
             if (cardModel == null) return;
+
+            // Load roles from role DB.
+            var cardRoles = _roleProvider.GetRolesForCard(cardModel.Name);
+
+            if (cardRoles != null)
+            {
+                cardModel.Roles.AddRange(cardRoles);
+            }
 
             cardModel.NumCopies = numCopies;
             var cardVm = new CardViewModel(cardModel);
@@ -84,9 +95,24 @@ namespace EdhDeckBuilder.ViewModel
         public void NewDeck()
         {
             // TODO: Check for unsaved changes.
-            // Clear card list.
+            Reset();
+        }
+
+        private void Reset()
+        {
+            foreach (var card in CardVms)
+            {
+                card.PropertyChanged -= CardVm_PropertyChanged;
+                card.RoleUpdated -= CardVm_RoleUpdated;
+            }
+
             CardVms.Clear();
-            // Reset deck name.
+
+            foreach (var roleHeader in TemplateVms)
+            {
+                roleHeader.Current = 0;
+            }
+
             Name = _defaultDeckName;
         }
 
@@ -106,6 +132,20 @@ namespace EdhDeckBuilder.ViewModel
 
         public void SaveDeck()
         {
+            // Check if we have a roles path set already.
+            // If not, prompt user for one.
+            if (string.IsNullOrEmpty(SettingsProvider.RolesFilePath()))
+            {
+                MessageBox.Show("Before saving the deck, choose a file in which to save role data.");
+                PromptUserForRolesFile();
+
+                // If we don't have a role file, we can't save. Abort.
+                if (string.IsNullOrEmpty(SettingsProvider.RolesFilePath()))
+                {
+                    return;
+                }
+            }
+
             // Check if we have a file path set already.
             // If not, prompt user for one.
             if (string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
@@ -123,11 +163,30 @@ namespace EdhDeckBuilder.ViewModel
             // We have a file path at this point. Convert the vm and save the file.
             var deckModel = ToModel();
             _deckProvider.SaveDeck(deckModel, SettingsProvider.DeckFilePath());
+            _roleProvider.SaveRoles(deckModel, SettingsProvider.RolesFilePath());
+        }
+
+        private void PromptUserForRolesFile()
+        {
+            var fileDialog = new CommonSaveFileDialog
+            {
+                Title = "Set Role File",
+                DefaultExtension = ".csv",
+                AlwaysAppendDefaultExtension = true
+            };
+            fileDialog.Filters.Add(new CommonFileDialogFilter("Comma Separated Values", "*.csv"));
+
+            if (fileDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                SettingsProvider.UpdateRolesFilePath(fileDialog.FileName);
+            }
         }
 
         public void OpenDeck()
         {
             // TODO: Check for unsaved changes.
+            Reset();
+
             // Prompt for csv file.
             var openDialog = new CommonOpenFileDialog
             {

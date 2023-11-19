@@ -18,5 +18,16 @@ namespace EdhDeckBuilder.Service
             Properties.Settings.Default.DeckFilePath = newPath;
             Properties.Settings.Default.Save();
         }
+
+        public static string RolesFilePath()
+        {
+            return Properties.Settings.Default.RolesFilePath;
+        }
+
+        public static void UpdateRolesFilePath(string newPath)
+        {
+            Properties.Settings.Default.RolesFilePath = newPath;
+            Properties.Settings.Default.Save();
+        }
     }
 }

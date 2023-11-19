@@ -27,8 +27,7 @@ namespace EdhDeckBuilder.Service
 
                 foreach (var cardModel in deckModel.Cards)
                 {
-                    var cardName = cardModel.Name.Contains(',') ? $"\"{cardModel.Name}\"" : cardModel.Name;
-                    writer.WriteLine($"{cardModel.NumCopies},{cardName}");
+                    writer.WriteLine($"{cardModel.NumCopies},{cardModel.Name.CsvFormat()}");
                 }
             }
         }
@@ -37,7 +36,7 @@ namespace EdhDeckBuilder.Service
         /// Loads a list of card names from deck file.
         /// </summary>
         /// <param name="deckFilePath">The path of the file that contains the decklist.</param>
-        /// <returns></returns>
+        /// <returns>A model of the decklist.</returns>
         public DeckModel LoadDeck(string deckFilePath)
         {
             DeckModel result = null;

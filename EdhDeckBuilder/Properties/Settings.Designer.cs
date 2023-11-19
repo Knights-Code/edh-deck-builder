@@ -34,5 +34,17 @@ namespace EdhDeckBuilder.Properties {
                 this["DeckFilePath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RolesFilePath {
+            get {
+                return ((string)(this["RolesFilePath"]));
+            }
+            set {
+                this["RolesFilePath"] = value;
+            }
+        }
     }
 }

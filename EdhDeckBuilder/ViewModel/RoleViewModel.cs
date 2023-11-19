@@ -42,7 +42,7 @@ namespace EdhDeckBuilder.ViewModel
 
         public RoleModel ToModel()
         {
-            return new RoleModel(_name);
+            return new RoleModel(_name, 1, Applies);
         }
     }
 }
