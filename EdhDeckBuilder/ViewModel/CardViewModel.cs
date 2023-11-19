@@ -90,6 +90,16 @@ namespace EdhDeckBuilder.ViewModel
         {
             return Name;
         }
+
+        public CardModel ToModel()
+        {
+            return new CardModel
+            {
+                Name = _name,
+                NumCopies = _numCopies,
+                Roles = _roleVms.Select(roleVm => roleVm.ToModel()).ToList(),
+            };
+        }
     }
 
     public class RoleUpdatedSenders
