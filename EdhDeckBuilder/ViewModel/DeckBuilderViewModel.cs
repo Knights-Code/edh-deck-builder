@@ -159,6 +159,12 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        public void ExportToClipboard()
+        {
+            var clipboardText = UtilityFunctions.CardsToClipboardFormat(CardVms.Select(cardVm => cardVm.ToModel()).ToList());
+            Clipboard.SetText(clipboardText);
+        }
+
         private bool RolesDataSourceIsSet()
         {
             // Check if we have a roles path set already.

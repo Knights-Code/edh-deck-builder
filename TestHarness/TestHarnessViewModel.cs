@@ -50,6 +50,7 @@ namespace TestHarness
         public ICommand SaveDeckAsCommand { get; set; }
         public ICommand OpenDeckCommand { get; set; }
         public ICommand ImportFromClipboardCommand { get; set; }
+        public ICommand ExportToClipboardCommand { get; set; }
         #endregion
 
         public ICommand NewCardEnterCommand { get; set; }
@@ -64,6 +65,7 @@ namespace TestHarness
             SaveDeckAsCommand = new DelegateCommand(SaveDeckAs);
             OpenDeckCommand = new DelegateCommand(OpenDeck);
             ImportFromClipboardCommand = new DelegateCommand(ImportFromClipboard);
+            ExportToClipboardCommand = new DelegateCommand(ExportToClipboard);
 
             DeckBuilderVm = new DeckBuilderViewModel();
             _cardProvider = new CardProvider();
@@ -103,6 +105,11 @@ namespace TestHarness
         public void ImportFromClipboard()
         {
             DeckBuilderVm.ImportFromClipboard();
+        }
+
+        public void ExportToClipboard()
+        {
+            DeckBuilderVm.ExportToClipboard();
         }
     }
 }

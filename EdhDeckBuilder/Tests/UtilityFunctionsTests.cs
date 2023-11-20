@@ -1,5 +1,7 @@
-﻿using EdhDeckBuilder.Service;
+﻿using EdhDeckBuilder.Model;
+using EdhDeckBuilder.Service;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace EdhDeckBuilder.Tests
 {
@@ -24,6 +26,20 @@ namespace EdhDeckBuilder.Tests
             Assert.AreEqual("Forest", forest.Name);
             Assert.AreEqual("Foulmire Knight // Profane Insight", foulmireKnight.Name);
             Assert.AreEqual("Ghalta, Primal Hunger", ghalta.Name);
+        }
+
+        [Test]
+        public void CardsToClipboardFormat_WhenGivenValidCardModels_ReturnsCardListAsString()
+        {
+            var cards = new List<CardModel>
+            {
+                new CardModel { Name = "Forest", NumCopies = 10 },
+                new CardModel { Name = "Ghalta, Primal Hunger", NumCopies = 1 }
+            };
+
+            var clipboardFormat = UtilityFunctions.CardsToClipboardFormat(cards);
+
+            Assert.AreEqual("10 Forest\r\n1 Ghalta, Primal Hunger", clipboardFormat);
         }
     }
 }

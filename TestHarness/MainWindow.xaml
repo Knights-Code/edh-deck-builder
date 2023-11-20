@@ -18,6 +18,7 @@
             </MenuItem>
             <MenuItem Header="_Data">
                 <MenuItem Header="Import from Clipboard" Command="{Binding ImportFromClipboardCommand}" />
+                <MenuItem Header="Export to Clipboard" Command="{Binding ExportToClipboardCommand}" />
             </MenuItem>
         </Menu>
         <Grid>

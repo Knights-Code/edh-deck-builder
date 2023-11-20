@@ -52,5 +52,10 @@ namespace EdhDeckBuilder.Service
             stream.Position = 0;
             return stream;
         }
+
+        public static string CardsToClipboardFormat(List<CardModel> cards)
+        {
+            return string.Join(Environment.NewLine, cards.Select(c => c.ClipboardFormat()));
+        }
     }
 }
