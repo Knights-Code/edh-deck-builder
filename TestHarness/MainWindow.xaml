@@ -16,6 +16,9 @@
                 <MenuItem Header="Save As..." Command="{Binding SaveDeckAsCommand}" />
                 <MenuItem Header="Open..." Command="{Binding OpenDeckCommand}" />
             </MenuItem>
+            <MenuItem Header="_Data">
+                <MenuItem Header="Import from Clipboard" Command="{Binding ImportFromClipboardCommand}" />
+            </MenuItem>
         </Menu>
         <Grid>
             <Grid.RowDefinitions>

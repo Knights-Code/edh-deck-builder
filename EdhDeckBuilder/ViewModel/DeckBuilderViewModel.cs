@@ -94,6 +94,14 @@ namespace EdhDeckBuilder.ViewModel
             return true;
         }
 
+        public void SaveDeckAs()
+        {
+            if (!RolesDataSourceIsSet()) return;
+
+            PromptUserForSaveDestination();
+            SaveDeck();
+        }
+
         public void NewDeck()
         {
             // TODO: Check for unsaved changes.
@@ -151,7 +159,7 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
-        public void SaveDeck()
+        private bool RolesDataSourceIsSet()
         {
             // Check if we have a roles path set already.
             // If not, prompt user for one.
@@ -163,9 +171,16 @@ namespace EdhDeckBuilder.ViewModel
                 // If we don't have a role file, we can't save. Abort.
                 if (string.IsNullOrEmpty(SettingsProvider.RolesFilePath()))
                 {
-                    return;
+                    return false;
                 }
             }
+
+            return true;
+        }
+
+        public void SaveDeck()
+        {
+            if (!RolesDataSourceIsSet()) return;
 
             // Check if we have a file path set already.
             // If not, prompt user for one.
@@ -217,19 +232,27 @@ namespace EdhDeckBuilder.ViewModel
 
             if (openDialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                var deckModel = _deckProvider.LoadDeck(openDialog.FileName);
-
-                // Set name.
-                Name = deckModel.Name;
-
-                // Add cards.
-                foreach (var cardModel in deckModel.Cards)
-                {
-                    AddCard(cardModel.Name, cardModel.NumCopies);
-                }
+                LoadDeck(openDialog.FileName);
 
                 // Update deck file path for saving.
                 SettingsProvider.UpdateDeckFilePath(openDialog.FileName);
+            }
+        }
+
+        public void LoadDeck(string deckPath)
+        {
+            // TODO: Check for unsaved changes.
+            Reset();
+
+            var deckModel = _deckProvider.LoadDeck(deckPath);
+
+            // Set name.
+            Name = deckModel.Name;
+
+            // Add cards.
+            foreach (var cardModel in deckModel.Cards)
+            {
+                AddCard(cardModel.Name, cardModel.NumCopies);
             }
         }
 
