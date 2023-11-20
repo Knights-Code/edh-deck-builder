@@ -24,5 +24,10 @@ namespace EdhDeckBuilder.Model
         {
             return $"https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={MultiverseId}&type=card";
         }
+
+        public string ClipboardFormat()
+        {
+            return $"{NumCopies} {Name}";
+        }
     }
 }

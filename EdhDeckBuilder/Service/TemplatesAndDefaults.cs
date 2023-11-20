@@ -19,8 +19,8 @@ namespace EdhDeckBuilder.Service
                 "Wipe",
                 "Land",
                 "Standalone",
-                "Enabler",
                 "Enhancer",
+                "Enabler",
                 "Tapland"
             };
 

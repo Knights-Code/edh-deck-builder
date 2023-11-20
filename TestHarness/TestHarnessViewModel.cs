@@ -49,6 +49,8 @@ namespace TestHarness
         public ICommand SaveDeckCommand { get; set; }
         public ICommand SaveDeckAsCommand { get; set; }
         public ICommand OpenDeckCommand { get; set; }
+        public ICommand ImportFromClipboardCommand { get; set; }
+        public ICommand ExportToClipboardCommand { get; set; }
         #endregion
 
         public ICommand NewCardEnterCommand { get; set; }
@@ -58,15 +60,21 @@ namespace TestHarness
             NewCardEnterCommand = new DelegateCommand(AddNewCard, () => !string.IsNullOrEmpty(NewCardName));
 
             // Menu Commands //
-            // TODO: New Deck
             NewDeckCommand = new DelegateCommand(NewDeck);
             SaveDeckCommand = new DelegateCommand(SaveDeck);
-            // TODO: Save Deck As
+            SaveDeckAsCommand = new DelegateCommand(SaveDeckAs);
             OpenDeckCommand = new DelegateCommand(OpenDeck);
-            DeckBuilderVm = new DeckBuilderViewModel();
+            ImportFromClipboardCommand = new DelegateCommand(ImportFromClipboard);
+            ExportToClipboardCommand = new DelegateCommand(ExportToClipboard);
 
+            DeckBuilderVm = new DeckBuilderViewModel();
             _cardProvider = new CardProvider();
             _cardProvider.Initialise();
+
+            if (!string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
+            {
+                DeckBuilderVm.LoadDeck(SettingsProvider.DeckFilePath());
+            }
         }
 
         public void NewDeck()
@@ -87,6 +95,21 @@ namespace TestHarness
         public void AddNewCard()
         {
             DeckBuilderVm.AddCard(NewCardName);
+        }
+
+        public void SaveDeckAs()
+        {
+            DeckBuilderVm.SaveDeckAs();
+        }
+
+        public void ImportFromClipboard()
+        {
+            DeckBuilderVm.ImportFromClipboard();
+        }
+
+        public void ExportToClipboard()
+        {
+            DeckBuilderVm.ExportToClipboard();
         }
     }
 }
