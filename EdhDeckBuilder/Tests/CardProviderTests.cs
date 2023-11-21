@@ -41,7 +41,7 @@ namespace EdhDeckBuilder.Tests
         public void DownloadImageForCardTest()
         {
             var cardModel = new CardModel { MultiverseId = "130550" };
-            var image = _cardProvider.DownloadImageForCard(cardModel);
+            var image = _cardProvider.DownloadImageForCard(cardModel.Name);
 
             Assert.NotNull(image);
             Assert.NotNull(cardModel.CardImage);

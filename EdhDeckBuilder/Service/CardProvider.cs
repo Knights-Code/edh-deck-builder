@@ -43,8 +43,6 @@ namespace EdhDeckBuilder.Service
                     var multiverseId = fields[12];
                     var scryfallId = fields[13];
 
-                    if (string.IsNullOrEmpty(multiverseId)) continue; // Ignore cards without multiverse IDs.
-
                     var uuid = fields[18];
 
                     if (string.IsNullOrEmpty(uuid)) continue; // Ignore cards without a UUID (don't think this is possible).
@@ -109,8 +107,12 @@ namespace EdhDeckBuilder.Service
         /// </summary>
         /// <param name="cardModel">The card to retrieve the image for.</param>
         /// <returns></returns>
-        public Image DownloadImageForCard(CardModel cardModel)
+        public Image DownloadImageForCard(string cardName)
         {
+            CardModel cardModel;
+            cardModel = TryGetCard(cardName);
+            if (cardModel == null) return null;
+
             if (cardModel.CardImage != null) return cardModel.CardImage;
 
             if (!cardModel.HasDownloadableImage) return null;

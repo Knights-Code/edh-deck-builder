@@ -31,6 +31,9 @@ namespace EdhDeckBuilder.View
             var cardView = sender as CardView;
             var cardVm = cardView.DataContext as CardViewModel;
             cardVm.Hovered = true;
+
+            var vm = DataContext as DeckBuilderViewModel;
+            vm.HoveredCardVm = cardVm;
         }
 
         private void CardView_MouseLeave(object sender, MouseEventArgs e)
@@ -38,6 +41,9 @@ namespace EdhDeckBuilder.View
             var cardView = sender as CardView;
             var cardVm = cardView.DataContext as CardViewModel;
             cardVm.Hovered = false;
+
+            var vm = DataContext as DeckBuilderViewModel;
+            vm.HoveredCardVm = null;
         }
     }
 }
