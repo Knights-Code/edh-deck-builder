@@ -85,6 +85,7 @@
     <Compile Include="Service\SettingsProvider.cs" />
     <Compile Include="Service\TemplatesAndDefaults.cs" />
     <Compile Include="Service\UtilityFunctions.cs" />
+    <Compile Include="Tests\Model\CardModelTests.cs" />
     <Compile Include="Tests\Model\DeckProviderTests.cs" />
     <Compile Include="Tests\Model\RoleModelTests.cs" />
     <Compile Include="Tests\Model\TemplateModelTests.cs" />
