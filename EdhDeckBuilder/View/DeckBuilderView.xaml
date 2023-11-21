@@ -51,7 +51,7 @@
             <ItemsControl ItemsSource="{Binding CardVms}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <local:CardView DataContext="{Binding}" />
+                        <local:CardView DataContext="{Binding}" MouseEnter="CardView_MouseEnter" MouseLeave="CardView_MouseLeave" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

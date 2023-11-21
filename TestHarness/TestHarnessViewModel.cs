@@ -68,8 +68,6 @@ namespace TestHarness
             ExportToClipboardCommand = new DelegateCommand(ExportToClipboard);
 
             DeckBuilderVm = new DeckBuilderViewModel();
-            _cardProvider = new CardProvider();
-            _cardProvider.Initialise();
 
             if (!string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
             {

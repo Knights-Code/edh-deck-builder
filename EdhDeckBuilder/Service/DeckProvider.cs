@@ -21,6 +21,11 @@ namespace EdhDeckBuilder.Service
         /// <param name="deckFilePath">The path of the file to which to write the decklist.</param>
         public void SaveDeck(DeckModel deckModel, string deckFilePath)
         {
+            if (File.Exists(deckFilePath))
+            {
+                File.Delete(deckFilePath);
+            }
+
             using (var writer = new StreamWriter(new FileStream(deckFilePath, FileMode.OpenOrCreate)))
             {
                 writer.WriteLine(deckModel.Name);
