@@ -11,8 +11,8 @@ namespace EdhDeckBuilder.Service
 {
     public class RoleProvider
     {
-        private Dictionary<string, List<RoleModel>> _rolesByCardName;
-        private List<string> _roleHeaders;
+        private readonly Dictionary<string, List<RoleModel>> _rolesByCardName;
+        private readonly List<string> _roleHeaders;
         private bool _initialised = false;
 
         public RoleProvider()
@@ -91,6 +91,11 @@ namespace EdhDeckBuilder.Service
 
         public void SaveRoles(DeckModel deckModel, string rolesFilePath)
         {
+            if (File.Exists(rolesFilePath))
+            {
+                File.Delete(rolesFilePath);
+            }
+
             // Update roles map with deck's.
             foreach (var card in deckModel.Cards)
             {
@@ -100,8 +105,8 @@ namespace EdhDeckBuilder.Service
             // Write the roles to the file.
             using (var writer = new StreamWriter(new FileStream(rolesFilePath, FileMode.OpenOrCreate)))
             {
+                UpdateRoleHeaders(deckModel);
                 writer.WriteLine(string.Join(",", _roleHeaders));
-
                 var cards = _rolesByCardName.Keys;
 
                 foreach (var cardName in cards)
@@ -116,7 +121,6 @@ namespace EdhDeckBuilder.Service
                         continue;
                     }
 
-                    // NOTE: Custom roles are not supported.
                     foreach (var roleHeader in _roleHeaders)
                     {
                         if (string.IsNullOrEmpty(roleHeader)) continue;
@@ -137,6 +141,19 @@ namespace EdhDeckBuilder.Service
                     }
 
                     writer.WriteLine();
+                }
+            }
+        }
+
+        private void UpdateRoleHeaders(DeckModel deckModel)
+        {
+            // Check deck model for custom roles and add any that don't exist in
+            // role header collection already.
+            foreach (var customRole in deckModel.CustomRoles)
+            {
+                if (!_roleHeaders.Contains(customRole))
+                {
+                    _roleHeaders.Add(customRole);
                 }
             }
         }
