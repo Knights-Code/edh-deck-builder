@@ -55,7 +55,7 @@ namespace EdhDeckBuilder.Service
 
         public static string CardsToClipboardFormat(List<CardModel> cards)
         {
-            return string.Join(Environment.NewLine, cards.Select(c => c.ClipboardFormat()));
+            return string.Join(Environment.NewLine, cards.Where(c => c.NumCopies > 0).Select(c => c.ClipboardFormat()));
         }
     }
 }
