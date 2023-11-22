@@ -20,6 +20,9 @@
                 <MenuItem Header="Import from Clipboard" Command="{Binding ImportFromClipboardCommand}" />
                 <MenuItem Header="Export to Clipboard" Command="{Binding ExportToClipboardCommand}" />
             </MenuItem>
+            <MenuItem Header="_Roles">
+                <MenuItem Header="Custom Role" Command="{Binding CustomRoleCommand}" />
+            </MenuItem>
         </Menu>
         <Grid>
             <Grid.RowDefinitions>

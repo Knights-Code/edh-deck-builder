@@ -30,7 +30,12 @@ namespace EdhDeckBuilder.Service
             {
                 writer.Write($"{deckModel.Name},");
                 writer.Write(string.Join(",", TemplatesAndDefaults.DefaultRoleSet().Select(role => role.CsvFormat())));
-                writer.WriteLine(string.Join(",", deckModel.CustomRoles.Select(role => role.CsvFormat())));
+
+                if (deckModel.CustomRoles.Any())
+                {
+                    writer.Write(",");
+                    writer.WriteLine(string.Join(",", deckModel.CustomRoles.Select(role => role.CsvFormat())));
+                }
 
                 foreach (var cardModel in deckModel.Cards)
                 {

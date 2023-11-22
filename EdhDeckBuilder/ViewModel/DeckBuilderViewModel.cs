@@ -85,7 +85,7 @@ namespace EdhDeckBuilder.ViewModel
             return CardVms.Sum(vm => vm.NumCopies);
         }
 
-        public bool AddCard(string cardName, int numCopies = 1)
+        public bool AddCard(string cardName, int numCopies = 1, List<string> customRoles = null)
         {
             if (CardVms.Any(vm => vm.Name == cardName)) return false; // Don't add dupes.
 
@@ -102,7 +102,7 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             cardModel.NumCopies = numCopies;
-            var cardVm = new CardViewModel(cardModel);
+            var cardVm = new CardViewModel(cardModel, customRoles);
 
             if (cardVm.CardImage == null)
             {
@@ -142,11 +142,8 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             CardVms.Clear();
-
-            foreach (var roleHeader in TemplateVms)
-            {
-                roleHeader.Current = 0;
-            }
+            TemplateVms.Clear();
+            SetUpDefaultTemplateAndRoles();
 
             Name = _defaultDeckName;
         }
@@ -280,11 +277,37 @@ namespace EdhDeckBuilder.ViewModel
             // Set name.
             Name = deckModel.Name;
 
+            // Add custom role columns.
+            foreach (var customRole in deckModel.CustomRoles)
+            {
+                TemplateVms.Add(new TemplateViewModel(new TemplateModel(customRole, 0, 100)));
+            }
+
             // Add cards.
             foreach (var cardModel in deckModel.Cards)
             {
-                AddCard(cardModel.Name, cardModel.NumCopies);
+                AddCard(cardModel.Name, cardModel.NumCopies, deckModel.CustomRoles);
             }
+        }
+
+        public void AddCustomRole()
+        {
+            var numDefaultRoles = TemplatesAndDefaults.DefaultRoleSet().Count;
+            var numCustomRoles = TemplateVms.Count - numDefaultRoles;
+
+            // TODO: Prompt user for custom role name.
+            var customRoleName = $"Custom {++numCustomRoles}";
+
+            // Create role header.
+            TemplateVms.Add(new TemplateViewModel(new TemplateModel(customRoleName, 0, 100)));
+
+            // Create new role view model for cards.
+            foreach (var card in CardVms)
+            {
+                card.AddRole(customRoleName);
+            }
+
+            RaisePropertyChanged(nameof(NumRoles));
         }
 
         private void PromptUserForSaveDestination()
@@ -365,6 +388,13 @@ namespace EdhDeckBuilder.ViewModel
             var result = new DeckModel(deckName);
 
             result.AddCards(CardVms.Select(cardVm => cardVm.ToModel()));
+            var defaultRoleSet = TemplatesAndDefaults.DefaultRoleSet();
+            foreach (var role in TemplateVms.Select(r => r.Role))
+            {
+                if (defaultRoleSet.Contains(role)) continue;
+
+                result.CustomRoles.Add(role);
+            }
 
             return result;
         }

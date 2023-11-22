@@ -62,7 +62,7 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _roleVms, value); }
         }
 
-        public CardViewModel(CardModel model)
+        public CardViewModel(CardModel model, List<string> customRoles = null)
         {
             _name = model.Name;
             _cardImage = model.CardImage;
@@ -70,6 +70,14 @@ namespace EdhDeckBuilder.ViewModel
             _roleVms = new ObservableCollection<RoleViewModel>();
 
             CreateDefaultRoleVms();
+
+            if (customRoles != null)
+            {
+                foreach (var customRole in customRoles)
+                {
+                    AddRole(customRole);
+                }
+            }
 
             foreach (var roleModel in model.Roles)
             {
@@ -87,16 +95,15 @@ namespace EdhDeckBuilder.ViewModel
             {
                 AddRole(defaultRole);
             }
-
-            // TODO: Get custom roles here.
         }
 
-        private void AddRole(string roleName)
+        public void AddRole(string roleName)
         {
             if (_roleVms.Any(vm => vm.Name == roleName)) return;
             var roleVm = new RoleViewModel(roleName);
             roleVm.PropertyChanged += RoleVm_PropertyChanged;
             RoleVms.Add(roleVm);
+            RaisePropertyChanged(nameof(NumRoles));
         }
 
         private void RoleVm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
