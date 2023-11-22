@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace EdhDeckBuilder.ViewModel
 {
@@ -34,6 +35,23 @@ namespace EdhDeckBuilder.ViewModel
             get { return _numCopies; }
             set { SetProperty(ref _numCopies, value); }
         }
+
+        public SolidColorBrush BackgroundColour
+        {
+            get { return Hovered ? new SolidColorBrush(Colors.LightGray) : new SolidColorBrush(Colors.Transparent); }
+        }
+
+        private bool _hovered;
+        public bool Hovered
+        {
+            get { return _hovered; }
+            set
+            {
+                SetProperty(ref _hovered, value);
+                RaisePropertyChanged(nameof(BackgroundColour));
+            }
+        }
+
 
         public int NumRoles => RoleVms.Count;
 

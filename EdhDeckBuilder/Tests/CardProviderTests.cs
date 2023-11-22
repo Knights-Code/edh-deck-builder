@@ -32,7 +32,6 @@ namespace EdhDeckBuilder.Tests
         {
             var card = _cardProvider.TryGetCard("Ancestor's Chosen");
             var cardImageUrl = card.BuildGathererUrl();
-            Console.WriteLine($"Gatherer URL: {cardImageUrl}");
 
             Assert.NotNull(card);
             Assert.AreEqual("https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=130550&type=card", cardImageUrl);
@@ -42,7 +41,7 @@ namespace EdhDeckBuilder.Tests
         public void DownloadImageForCardTest()
         {
             var cardModel = new CardModel { MultiverseId = "130550" };
-            var image = _cardProvider.DownloadImageForCard(cardModel);
+            var image = _cardProvider.DownloadImageForCard(cardModel.Name);
 
             Assert.NotNull(image);
             Assert.NotNull(cardModel.CardImage);

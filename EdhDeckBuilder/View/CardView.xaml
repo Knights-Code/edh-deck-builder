@@ -12,7 +12,7 @@
     <UserControl.Resources>
         <converters:TextIntegerConverter x:Key="NumberConverter" EmptyStringValue="0"/>
     </UserControl.Resources>
-    <Grid>
+    <Grid Background="{Binding BackgroundColour}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="50"/>
             <ColumnDefinition Width="200"/>

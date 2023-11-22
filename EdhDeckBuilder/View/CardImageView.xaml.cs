@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EdhDeckBuilder
+namespace EdhDeckBuilder.View
 {
     /// <summary>
-    /// Interaction logic for CardView.xaml
+    /// Interaction logic for CardImageView.xaml
     /// </summary>
-    public partial class CardView : UserControl
+    public partial class CardImageView : UserControl
     {
-        public CardView()
+        public CardImageView()
         {
             InitializeComponent();
         }

@@ -26,6 +26,22 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _name, value); }
         }
 
+        private CardViewModel _hoveredCardVm;
+        public CardViewModel HoveredCardVm
+        {
+            get { return _hoveredCardVm; }
+            set
+            {
+                if (value != null && value.CardImage == null)
+                {
+                    value.CardImage = _cardProvider.DownloadImageForCard(value.Name);
+                }
+
+                SetProperty(ref _hoveredCardVm, value);
+            }
+        }
+
+
         private ObservableCollection<CardViewModel> _cardVms = new ObservableCollection<CardViewModel>();
         public ObservableCollection<CardViewModel> CardVms
         {
@@ -78,11 +94,10 @@ namespace EdhDeckBuilder.ViewModel
             cardModel.NumCopies = numCopies;
             var cardVm = new CardViewModel(cardModel);
 
-            // TODO: Temporarily disabled while working on other things.
-            //if (cardVm.CardImage == null)
-            //{
-            //    cardVm.CardImage = _cardProvider.DownloadImageForCard(cardModel);
-            //}
+            if (cardVm.CardImage == null)
+            {
+                cardVm.CardImage = _cardProvider.DownloadImageForCard(cardModel.Name);
+            }
 
             cardVm.PropertyChanged += CardVm_PropertyChanged;
             cardVm.RoleUpdated += CardVm_RoleUpdated;
