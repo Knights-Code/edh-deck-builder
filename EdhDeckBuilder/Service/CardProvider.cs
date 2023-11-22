@@ -47,7 +47,7 @@ namespace EdhDeckBuilder.Service
 
                     if (string.IsNullOrEmpty(uuid)) continue; // Ignore cards without a UUID (don't think this is possible).
 
-                    if (multiverseAndScryfallIdsByUuid.ContainsKey(uuid)) continue; // Only record first multiverse ID for each UUID.
+                    if (multiverseAndScryfallIdsByUuid.ContainsKey(uuid)) continue; // Only record IDs for first occurrence of the UUID.
 
                     multiverseAndScryfallIdsByUuid[uuid] = new Tuple<string, string>(multiverseId, scryfallId);
                 }
