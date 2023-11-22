@@ -49,7 +49,7 @@ namespace EdhDeckBuilder.Tests.Model
             using (var reader = new StreamReader(_testDeckFilename))
             {
                 var fileText = reader.ReadToEnd();
-                Assert.AreEqual("Test Deck\r\n1,Skullclamp\r\n1,Llanowar Elves\r\n10,Forest\r\n", fileText);
+                Assert.AreEqual("Test Deck,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland\r\n1,Skullclamp\r\n1,Llanowar Elves\r\n10,Forest\r\n", fileText);
             }
         }
 
@@ -81,8 +81,29 @@ namespace EdhDeckBuilder.Tests.Model
             using (var reader = new StreamReader(_testDeckFilename))
             {
                 var fileText = reader.ReadToEnd();
-                Assert.AreEqual("Test Deck\r\n1,Skullclamp\r\n1,\"Ghalta, Primal Hunger\"\r\n10,Forest\r\n", fileText);
+                Assert.AreEqual("Test Deck,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland\r\n1,Skullclamp\r\n1,\"Ghalta, Primal Hunger\"\r\n10,Forest\r\n", fileText);
             }
+        }
+
+        [Test]
+        public void LoadDeck_WhenGivenFilePathWithDeckWithCustomRoles_LoadsCorrectly()
+        {
+            using (var writer = new StreamWriter(new FileStream(_testDeckFilename, FileMode.OpenOrCreate)))
+            {
+                writer.WriteLine("Test Deck,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland,Unplayables");
+                writer.WriteLine("10,Forest");
+                writer.WriteLine("1,Skullclamp");
+                writer.WriteLine("1,\"Ghalta, Primal Hunger\"");
+            }
+
+            var deckProvider = new DeckProvider();
+
+            var deck = deckProvider.LoadDeck(_testDeckFilename);
+
+            Assert.NotNull(deck.CustomRoles);
+            Assert.AreEqual(1, deck.CustomRoles.Count);
+            var role = deck.CustomRoles.FirstOrDefault(r => r == "Unplayables");
+            Assert.NotNull(role);
         }
 
         [Test]

@@ -28,7 +28,9 @@ namespace EdhDeckBuilder.Service
 
             using (var writer = new StreamWriter(new FileStream(deckFilePath, FileMode.OpenOrCreate)))
             {
-                writer.WriteLine(deckModel.Name);
+                writer.Write($"{deckModel.Name},");
+                writer.Write(string.Join(",", TemplatesAndDefaults.DefaultRoleSet().Select(role => role.CsvFormat())));
+                writer.WriteLine(string.Join(",", deckModel.CustomRoles.Select(role => role.CsvFormat())));
 
                 foreach (var cardModel in deckModel.Cards)
                 {
@@ -52,6 +54,17 @@ namespace EdhDeckBuilder.Service
 
                 var deckLine = csvParser.ReadFields();
                 var deckName = deckLine[0];
+                result = new DeckModel(deckName);
+
+                // Load custom roles, if any.
+                foreach (var item in deckLine)
+                {
+                    if (item == deckName) continue;
+                    if (TemplatesAndDefaults.DefaultRoleSet().Contains(item)) continue;
+
+                    result.CustomRoles.Add(item);
+                }
+
                 var cards = new List<CardModel>();
 
                 while (!csvParser.EndOfData)
@@ -65,7 +78,6 @@ namespace EdhDeckBuilder.Service
                     cards.Add(new CardModel { Name = name, NumCopies = intNumCopies });
                 }
 
-                result = new DeckModel(deckName);
                 result.AddCards(cards);
             }
 

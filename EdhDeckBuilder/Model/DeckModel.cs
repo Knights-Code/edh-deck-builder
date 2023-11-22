@@ -16,6 +16,7 @@ namespace EdhDeckBuilder.Model
         {
             Name = name;
             Cards = new List<CardModel>();
+            CustomRoles = new List<string>();
         }
 
         public void AddCards(IEnumerable<CardModel> cards)
