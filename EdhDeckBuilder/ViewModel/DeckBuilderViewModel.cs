@@ -1,5 +1,6 @@
 ﻿using EdhDeckBuilder.Model;
 using EdhDeckBuilder.Service;
+using EdhDeckBuilder.Service.Clipboard;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace EdhDeckBuilder.ViewModel
         private DeckProvider _deckProvider;
         private RoleProvider _roleProvider;
         private Dictionary<string, int> _lastNumCopiesForCard = new Dictionary<string, int>();
+        private IClipboard _clipboard;
 
         private string _defaultDeckName = "Untitled Deck";
 
@@ -70,11 +72,14 @@ namespace EdhDeckBuilder.ViewModel
 
         public int TotalCards => CalculateTotalCards();
 
-        public DeckBuilderViewModel()
+        public DeckBuilderViewModel(IClipboard clipboard = null)
         {
             _cardProvider = new CardProvider();
             _deckProvider = new DeckProvider();
             _roleProvider = new RoleProvider();
+
+            if (clipboard != null) _clipboard = clipboard;
+            else _clipboard = new SimpleClipboard();
 
             // TODO: If available, load templates from CSV database instead.
             SetUpDefaultTemplateAndRoles();
@@ -102,6 +107,14 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             cardModel.NumCopies = numCopies;
+
+            var deckBuilderVmCustomRoles = GetCustomRoles();
+
+            if (customRoles == null && deckBuilderVmCustomRoles.Any())
+            {
+                customRoles = deckBuilderVmCustomRoles;
+            }
+
             var cardVm = new CardViewModel(cardModel, customRoles);
 
             if (cardVm.CardImage == null)
@@ -164,7 +177,7 @@ namespace EdhDeckBuilder.ViewModel
 
         public void ImportFromClipboard()
         {
-            var cardsToAdd = UtilityFunctions.ParseCardsFromText(Clipboard.GetText());
+            var cardsToAdd = UtilityFunctions.ParseCardsFromText(_clipboard.GetClipboardText());
             var failures = new List<string>();
 
             foreach (var cardModel in cardsToAdd)
@@ -184,7 +197,7 @@ namespace EdhDeckBuilder.ViewModel
         public void ExportToClipboard()
         {
             var clipboardText = UtilityFunctions.CardsToClipboardFormat(CardVms.Select(cardVm => cardVm.ToModel()).ToList());
-            Clipboard.SetText(clipboardText);
+            _clipboard.SetClipboardText(clipboardText);
         }
 
         private bool RolesDataSourceIsSet()
@@ -382,19 +395,28 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        private List<string> GetCustomRoles()
+        {
+            var result = new List<string>();
+
+            var defaultRoleSet = TemplatesAndDefaults.DefaultRoleSet();
+            foreach (var role in TemplateVms.Select(r => r.Role))
+            {
+                if (defaultRoleSet.Contains(role)) continue;
+
+                result.Add(role);
+            }
+
+            return result;
+        }
+
         public DeckModel ToModel()
         {
             var deckName = string.IsNullOrEmpty(_name) ? _defaultDeckName : _name;
             var result = new DeckModel(deckName);
 
             result.AddCards(CardVms.Select(cardVm => cardVm.ToModel()));
-            var defaultRoleSet = TemplatesAndDefaults.DefaultRoleSet();
-            foreach (var role in TemplateVms.Select(r => r.Role))
-            {
-                if (defaultRoleSet.Contains(role)) continue;
-
-                result.CustomRoles.Add(role);
-            }
+            result.CustomRoles = GetCustomRoles();
 
             return result;
         }

@@ -10,7 +10,7 @@ namespace EdhDeckBuilder.Model
     {
         public string Name { get; private set; }
         public List<CardModel> Cards { get; private set; }
-        public List<string> CustomRoles { get; private set; }
+        public List<string> CustomRoles { get; set; }
 
         public DeckModel(string name)
         {

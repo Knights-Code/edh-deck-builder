@@ -1,4 +1,5 @@
 ﻿using EdhDeckBuilder.Model;
+using EdhDeckBuilder.Service.Clipboard;
 using EdhDeckBuilder.ViewModel;
 using NUnit.Framework;
 using System;
@@ -176,6 +177,32 @@ namespace EdhDeckBuilder.Tests.ViewModel
             var drawRoleHeader = deckBuilderVm.TemplateVms.First(vm => vm.Role == "Draw");
 
             Assert.AreEqual(1, drawRoleHeader.Current);
+        }
+
+        [Test]
+        public void AddCard__WhenCustomRoleHeadersExist_CreatesRoleVmsForCustomRoles()
+        {
+            var deckBuilderVm = new DeckBuilderViewModel();
+            deckBuilderVm.AddCustomRole();
+
+            deckBuilderVm.AddCard("Skullclamp");
+
+            var skullclamp = deckBuilderVm.CardVms.First();
+            Assert.AreEqual(deckBuilderVm.TemplateVms.Count, skullclamp.RoleVms.Count);
+        }
+
+        [Test]
+        public void ImportFromClipboard_WhenCustomRoleHeadersExist_CreatesRoleVmsForCustomRoles()
+        {
+            var fakeClipboard = new FakeClipboard();
+            var deckBuilderVm = new DeckBuilderViewModel(fakeClipboard);
+            fakeClipboard.SetClipboardText("1 Bronzebeak Foragers");
+            deckBuilderVm.AddCustomRole();
+
+            deckBuilderVm.ImportFromClipboard();
+
+            var foragers = deckBuilderVm.CardVms.First();
+            Assert.AreEqual(deckBuilderVm.TemplateVms.Count, foragers.RoleVms.Count);
         }
     }
 }
