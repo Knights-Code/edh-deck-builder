@@ -16,9 +16,10 @@
                 <MenuItem Header="Save As..." Command="{Binding SaveDeckAsCommand}" />
                 <MenuItem Header="Open..." Command="{Binding OpenDeckCommand}" />
             </MenuItem>
-            <MenuItem Header="_Data">
+            <MenuItem Header="_Card List">
                 <MenuItem Header="Import from Clipboard" Command="{Binding ImportFromClipboardCommand}" />
                 <MenuItem Header="Export to Clipboard" Command="{Binding ExportToClipboardCommand}" />
+                <MenuItem Header="Sort" Command="{Binding SortCardsCommand}" />
             </MenuItem>
             <MenuItem Header="_Roles">
                 <MenuItem Header="Custom Role" Command="{Binding CustomRoleCommand}" />

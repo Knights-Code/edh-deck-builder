@@ -88,6 +88,8 @@ namespace TestHarness
 
         public ICommand NewCardEnterCommand { get; set; }
 
+        public ICommand SortCardsCommand { get; set; }
+
         public TestHarnessViewModel()
         {
             NewCardEnterCommand = new DelegateCommand(AddNewCard, () => !string.IsNullOrEmpty(NewCardName));
@@ -100,6 +102,7 @@ namespace TestHarness
             ImportFromClipboardCommand = new DelegateCommand(ImportFromClipboard);
             ExportToClipboardCommand = new DelegateCommand(ExportToClipboard);
             CustomRoleCommand = new DelegateCommand(AddCustomRole);
+            SortCardsCommand = new DelegateCommand(SortCards, () => DeckBuilderVm.CardVms.Any());
 
             DeckBuilderVm = new DeckBuilderViewModel();
 
@@ -147,6 +150,11 @@ namespace TestHarness
         public void AddCustomRole()
         {
             DeckBuilderVm.AddCustomRole();
+        }
+
+        public void SortCards()
+        {
+            DeckBuilderVm.SortCards();
         }
     }
 }

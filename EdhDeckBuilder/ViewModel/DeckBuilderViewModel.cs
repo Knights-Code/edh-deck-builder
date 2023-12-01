@@ -85,6 +85,13 @@ namespace EdhDeckBuilder.ViewModel
             SetUpDefaultTemplateAndRoles();
         }
 
+        public void SortCards()
+        {
+            // Quite possibly the laziest sorting solution imaginable. Should probably
+            // use Live Shaping with a CollectionViewSource.
+            CardVms = new ObservableCollection<CardViewModel>(CardVms.OrderBy(card => card.Name));
+        }
+
         private int CalculateTotalCards()
         {
             return CardVms.Sum(vm => vm.NumCopies);
