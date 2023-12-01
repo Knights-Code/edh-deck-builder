@@ -92,6 +92,28 @@ namespace EdhDeckBuilder.ViewModel
             CardVms = new ObservableCollection<CardViewModel>(CardVms.OrderBy(card => card.Name));
         }
 
+        public void CleanUp()
+        {
+            Stack<CardViewModel> toRemove = new Stack<CardViewModel>();
+
+            foreach (var removableCard in CardVms.Where(card => card.NumCopies == 0))
+            {
+                toRemove.Push(removableCard);
+            }
+
+            while (toRemove.Any())
+            {
+                RemoveCard(toRemove.Pop());
+            }
+        }
+
+        private void RemoveCard(CardViewModel cardVm)
+        {
+            cardVm.PropertyChanged -= CardVm_PropertyChanged;
+            cardVm.RoleUpdated -= CardVm_RoleUpdated;
+            CardVms.Remove(cardVm);
+        }
+
         private int CalculateTotalCards()
         {
             return CardVms.Sum(vm => vm.NumCopies);
