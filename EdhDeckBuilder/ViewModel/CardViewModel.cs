@@ -38,7 +38,7 @@ namespace EdhDeckBuilder.ViewModel
 
         public SolidColorBrush BackgroundColour
         {
-            get { return Hovered ? new SolidColorBrush(Colors.LightGray) : new SolidColorBrush(Colors.Transparent); }
+            get { return Hovered ? new SolidColorBrush(Colors.LightGray) : Highlighted ? new SolidColorBrush(Colors.LightBlue) : new SolidColorBrush(Colors.Transparent); }
         }
 
         private bool _hovered;
@@ -52,6 +52,16 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        private bool _highlighted;
+        public bool Highlighted
+        {
+            get { return _highlighted; }
+            set
+            {
+                SetProperty(ref _highlighted, value);
+                RaisePropertyChanged(nameof(BackgroundColour));
+            }
+        }
 
         public int NumRoles => RoleVms.Count;
 

@@ -293,13 +293,38 @@ namespace EdhDeckBuilder.ViewModel
             // Add custom role columns.
             foreach (var customRole in deckModel.CustomRoles)
             {
-                TemplateVms.Add(new TemplateViewModel(new TemplateModel(customRole, 0, 100)));
+                AddRoleHeader(customRole, 0, 100);
             }
 
             // Add cards.
             foreach (var cardModel in deckModel.Cards)
             {
                 AddCard(cardModel.Name, cardModel.NumCopies, deckModel.CustomRoles);
+            }
+        }
+
+        private void AddRoleHeader(string name, int min, int max)
+        {
+            var newVm = new TemplateViewModel(new TemplateModel(name, min, max));
+            newVm.HighlightButtonClicked += RoleHeader_OnHighlightButtonClicked;
+            TemplateVms.Add(newVm);
+        }
+
+        private readonly Dictionary<string, bool> _highlightedRoles = new Dictionary<string, bool>();
+
+        private void RoleHeader_OnHighlightButtonClicked(object sender, EventArgs eventArgs)
+        {
+            var roleheaderVm = sender as TemplateViewModel;
+            var roleName = roleheaderVm.Role;
+
+            if (_highlightedRoles.ContainsKey(roleName)) _highlightedRoles[roleName] = !_highlightedRoles[roleName]; // Toggle highlighting for role.
+            else _highlightedRoles[roleName] = true;
+
+            // For any cards to which this role applies, check if it should be highlighted.
+            foreach (var card in CardVms.Where(c => c.RoleVms.Any(r => r.Name == roleName && r.Applies)))
+            {
+                // If any roles apply to the card that should be highlighted, highlight the card.
+                card.Highlighted = card.RoleVms.Any(r => r.Applies && _highlightedRoles.ContainsKey(r.Name) && _highlightedRoles[r.Name]);
             }
         }
 
@@ -312,7 +337,7 @@ namespace EdhDeckBuilder.ViewModel
             var customRoleName = $"Custom {++numCustomRoles}";
 
             // Create role header.
-            TemplateVms.Add(new TemplateViewModel(new TemplateModel(customRoleName, 0, 100)));
+            AddRoleHeader(customRoleName, 0, 100);
 
             // Create new role view model for cards.
             foreach (var card in CardVms)
@@ -359,24 +384,22 @@ namespace EdhDeckBuilder.ViewModel
 
             if (roleVm.Applies) relevantRoleHeader.Current += cardVm.NumCopies;
             else relevantRoleHeader.Current -= cardVm.NumCopies;
-            // NOTE TO SELF: This seemed like a good alternative to recalculating all totals whenever anything changed,
-            // but what happens when the user changes NumCopies while a role is checked, unchecks the role, and then
-            // changes the NumCopies back?
-            // Let's see:
-            // NumCopies: 1, Role: checked, Total: 1. -> Role change detected, use logic above.
-            // NumCopies: 2, Role: checked, Total: 2. -> NumCopies change detected, role checked, so update total.
-            // NumCopies: 2, Role: unchecked, Total: 0. -> Role change detected, use logic above. 
-            // NumCopies: 1, Role: unchecked, Total: 0. -> NumCopies change detected, role unchecked, leave total as is.
-            // As long as the logic responding to the NumCopies change only updates the total when the role is checked,
-            // it should be fine. ... I think.
+
+            // Update card highlighting.
+            cardVm.Highlighted = cardVm.RoleVms.Any(r => r.Applies && _highlightedRoles.ContainsKey(r.Name) && _highlightedRoles[r.Name]);
         }
 
         private void SetUpDefaultTemplateAndRoles()
         {
             foreach (var templateModel in TemplatesAndDefaults.DefaultTemplates())
             {
-                TemplateVms.Add(new TemplateViewModel(templateModel));
+                AddRoleHeader(templateModel);
             }
+        }
+
+        private void AddRoleHeader(TemplateModel templateModel)
+        {
+            AddRoleHeader(templateModel.Role, templateModel.Minimum, templateModel.Maximum);
         }
 
         /// <summary>

@@ -39,6 +39,8 @@ namespace EdhDeckBuilder.Service
 
                 foreach (var cardModel in deckModel.Cards)
                 {
+                    if (cardModel.NumCopies == 0) continue;
+
                     writer.WriteLine($"{cardModel.NumCopies},{cardModel.Name.CsvFormat()}");
                 }
             }
