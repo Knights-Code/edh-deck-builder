@@ -40,11 +40,9 @@ namespace EdhDeckBuilder.Tests
         [Test]
         public void DownloadImageForCardTest()
         {
-            var cardModel = new CardModel { MultiverseId = "130550" };
-            var image = _cardProvider.DownloadImageForCard(cardModel.Name);
+            var image = _cardProvider.DownloadImageForCard("Ancestor's Chosen");
 
             Assert.NotNull(image);
-            Assert.NotNull(cardModel.CardImage);
         }
     }
 }

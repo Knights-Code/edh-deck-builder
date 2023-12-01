@@ -41,5 +41,20 @@ namespace EdhDeckBuilder.Tests
 
             Assert.AreEqual("10 Forest\r\n1 Ghalta, Primal Hunger", clipboardFormat);
         }
+
+        [Test]
+        public void CardsToClipboardFormat_WhenGivenCardModelsWithZeroCopies_OmitsThoseCards()
+        {
+            var cards = new List<CardModel>
+            {
+                new CardModel { Name = "Forest", NumCopies = 10 },
+                new CardModel { Name = "Ghalta, Primal Hunger", NumCopies = 0 },
+                new CardModel { Name = "Skullclamp", NumCopies = 1 }
+            };
+
+            var clipboardFormat = UtilityFunctions.CardsToClipboardFormat(cards);
+
+            Assert.AreEqual("10 Forest\r\n1 Skullclamp", clipboardFormat);
+        }
     }
 }

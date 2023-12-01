@@ -1,5 +1,6 @@
 ﻿using EdhDeckBuilder.Model;
 using EdhDeckBuilder.Service;
+using EdhDeckBuilder.Service.Clipboard;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace EdhDeckBuilder.ViewModel
         private DeckProvider _deckProvider;
         private RoleProvider _roleProvider;
         private Dictionary<string, int> _lastNumCopiesForCard = new Dictionary<string, int>();
+        private IClipboard _clipboard;
 
         private string _defaultDeckName = "Untitled Deck";
 
@@ -70,11 +72,14 @@ namespace EdhDeckBuilder.ViewModel
 
         public int TotalCards => CalculateTotalCards();
 
-        public DeckBuilderViewModel()
+        public DeckBuilderViewModel(IClipboard clipboard = null)
         {
             _cardProvider = new CardProvider();
             _deckProvider = new DeckProvider();
             _roleProvider = new RoleProvider();
+
+            if (clipboard != null) _clipboard = clipboard;
+            else _clipboard = new SimpleClipboard();
 
             // TODO: If available, load templates from CSV database instead.
             SetUpDefaultTemplateAndRoles();
@@ -85,7 +90,7 @@ namespace EdhDeckBuilder.ViewModel
             return CardVms.Sum(vm => vm.NumCopies);
         }
 
-        public bool AddCard(string cardName, int numCopies = 1)
+        public bool AddCard(string cardName, int numCopies = 1, List<string> customRoles = null)
         {
             if (CardVms.Any(vm => vm.Name == cardName)) return false; // Don't add dupes.
 
@@ -102,7 +107,15 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             cardModel.NumCopies = numCopies;
-            var cardVm = new CardViewModel(cardModel);
+
+            var deckBuilderVmCustomRoles = GetCustomRoles();
+
+            if (customRoles == null && deckBuilderVmCustomRoles.Any())
+            {
+                customRoles = deckBuilderVmCustomRoles;
+            }
+
+            var cardVm = new CardViewModel(cardModel, customRoles);
 
             if (cardVm.CardImage == null)
             {
@@ -142,11 +155,8 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             CardVms.Clear();
-
-            foreach (var roleHeader in TemplateVms)
-            {
-                roleHeader.Current = 0;
-            }
+            TemplateVms.Clear();
+            SetUpDefaultTemplateAndRoles();
 
             Name = _defaultDeckName;
         }
@@ -167,7 +177,7 @@ namespace EdhDeckBuilder.ViewModel
 
         public void ImportFromClipboard()
         {
-            var cardsToAdd = UtilityFunctions.ParseCardsFromText(Clipboard.GetText());
+            var cardsToAdd = UtilityFunctions.ParseCardsFromText(_clipboard.GetClipboardText());
             var failures = new List<string>();
 
             foreach (var cardModel in cardsToAdd)
@@ -187,7 +197,7 @@ namespace EdhDeckBuilder.ViewModel
         public void ExportToClipboard()
         {
             var clipboardText = UtilityFunctions.CardsToClipboardFormat(CardVms.Select(cardVm => cardVm.ToModel()).ToList());
-            Clipboard.SetText(clipboardText);
+            _clipboard.SetClipboardText(clipboardText);
         }
 
         private bool RolesDataSourceIsSet()
@@ -280,11 +290,62 @@ namespace EdhDeckBuilder.ViewModel
             // Set name.
             Name = deckModel.Name;
 
+            // Add custom role columns.
+            foreach (var customRole in deckModel.CustomRoles)
+            {
+                AddRoleHeader(customRole, 0, 100);
+            }
+
             // Add cards.
             foreach (var cardModel in deckModel.Cards)
             {
-                AddCard(cardModel.Name, cardModel.NumCopies);
+                AddCard(cardModel.Name, cardModel.NumCopies, deckModel.CustomRoles);
             }
+        }
+
+        private void AddRoleHeader(string name, int min, int max)
+        {
+            var newVm = new TemplateViewModel(new TemplateModel(name, min, max));
+            newVm.HighlightButtonClicked += RoleHeader_OnHighlightButtonClicked;
+            TemplateVms.Add(newVm);
+        }
+
+        private readonly Dictionary<string, bool> _highlightedRoles = new Dictionary<string, bool>();
+
+        private void RoleHeader_OnHighlightButtonClicked(object sender, EventArgs eventArgs)
+        {
+            var roleheaderVm = sender as TemplateViewModel;
+            var roleName = roleheaderVm.Role;
+
+            if (_highlightedRoles.ContainsKey(roleName)) _highlightedRoles[roleName] = !_highlightedRoles[roleName]; // Toggle highlighting for role.
+            else _highlightedRoles[roleName] = true;
+
+            // For any cards to which this role applies, check if it should be highlighted.
+            foreach (var card in CardVms.Where(c => c.RoleVms.Any(r => r.Name == roleName && r.Applies)))
+            {
+                // If any roles apply to the card that should be highlighted, highlight the card.
+                card.Highlighted = card.RoleVms.Any(r => r.Applies && _highlightedRoles.ContainsKey(r.Name) && _highlightedRoles[r.Name]);
+            }
+        }
+
+        public void AddCustomRole()
+        {
+            var numDefaultRoles = TemplatesAndDefaults.DefaultRoleSet().Count;
+            var numCustomRoles = TemplateVms.Count - numDefaultRoles;
+
+            // TODO: Prompt user for custom role name.
+            var customRoleName = $"Custom {++numCustomRoles}";
+
+            // Create role header.
+            AddRoleHeader(customRoleName, 0, 100);
+
+            // Create new role view model for cards.
+            foreach (var card in CardVms)
+            {
+                card.AddRole(customRoleName);
+            }
+
+            RaisePropertyChanged(nameof(NumRoles));
         }
 
         private void PromptUserForSaveDestination()
@@ -323,24 +384,22 @@ namespace EdhDeckBuilder.ViewModel
 
             if (roleVm.Applies) relevantRoleHeader.Current += cardVm.NumCopies;
             else relevantRoleHeader.Current -= cardVm.NumCopies;
-            // NOTE TO SELF: This seemed like a good alternative to recalculating all totals whenever anything changed,
-            // but what happens when the user changes NumCopies while a role is checked, unchecks the role, and then
-            // changes the NumCopies back?
-            // Let's see:
-            // NumCopies: 1, Role: checked, Total: 1. -> Role change detected, use logic above.
-            // NumCopies: 2, Role: checked, Total: 2. -> NumCopies change detected, role checked, so update total.
-            // NumCopies: 2, Role: unchecked, Total: 0. -> Role change detected, use logic above. 
-            // NumCopies: 1, Role: unchecked, Total: 0. -> NumCopies change detected, role unchecked, leave total as is.
-            // As long as the logic responding to the NumCopies change only updates the total when the role is checked,
-            // it should be fine. ... I think.
+
+            // Update card highlighting.
+            cardVm.Highlighted = cardVm.RoleVms.Any(r => r.Applies && _highlightedRoles.ContainsKey(r.Name) && _highlightedRoles[r.Name]);
         }
 
         private void SetUpDefaultTemplateAndRoles()
         {
             foreach (var templateModel in TemplatesAndDefaults.DefaultTemplates())
             {
-                TemplateVms.Add(new TemplateViewModel(templateModel));
+                AddRoleHeader(templateModel);
             }
+        }
+
+        private void AddRoleHeader(TemplateModel templateModel)
+        {
+            AddRoleHeader(templateModel.Role, templateModel.Minimum, templateModel.Maximum);
         }
 
         /// <summary>
@@ -359,12 +418,28 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        private List<string> GetCustomRoles()
+        {
+            var result = new List<string>();
+
+            var defaultRoleSet = TemplatesAndDefaults.DefaultRoleSet();
+            foreach (var role in TemplateVms.Select(r => r.Role))
+            {
+                if (defaultRoleSet.Contains(role)) continue;
+
+                result.Add(role);
+            }
+
+            return result;
+        }
+
         public DeckModel ToModel()
         {
             var deckName = string.IsNullOrEmpty(_name) ? _defaultDeckName : _name;
             var result = new DeckModel(deckName);
 
             result.AddCards(CardVms.Select(cardVm => cardVm.ToModel()));
+            result.CustomRoles = GetCustomRoles();
 
             return result;
         }

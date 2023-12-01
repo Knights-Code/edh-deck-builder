@@ -7,16 +7,20 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              d:DataContext="{d:DesignData TemplateViewModel, IsDesignTimeCreatable=False}">
-    <Grid>
+    <Grid Background="{Binding BackgroundColour}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="0" Text="{Binding Maximum}" HorizontalAlignment="Center" />
-        <Label Grid.Row="1" Content="{Binding Current}" HorizontalContentAlignment="Center"/>
-        <TextBox Grid.Row="2" Text="{Binding Minimum}" HorizontalAlignment="Center" />
-        <Label Grid.Row="3" FontWeight="Bold" Content="{Binding Role}" HorizontalContentAlignment="Center" />
+        <Label Grid.Row="0"
+                Content="{Binding Current}"
+                HorizontalContentAlignment="Center" FontSize="18" FontWeight="Bold"
+                Foreground="{Binding ForegroundColour}"
+                ToolTip="{Binding ToolTipText}"/>
+        <Button Grid.Row="1"
+                Content="{Binding Role}"
+                HorizontalContentAlignment="Center" FontWeight="Bold"
+                Foreground="{Binding ButtonTextColour}"
+                Command="{Binding HighlightCommand}" />
     </Grid>
 </UserControl>

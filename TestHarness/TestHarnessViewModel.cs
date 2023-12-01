@@ -83,6 +83,7 @@ namespace TestHarness
         public ICommand OpenDeckCommand { get; set; }
         public ICommand ImportFromClipboardCommand { get; set; }
         public ICommand ExportToClipboardCommand { get; set; }
+        public ICommand CustomRoleCommand { get; set; }
         #endregion
 
         public ICommand NewCardEnterCommand { get; set; }
@@ -98,6 +99,7 @@ namespace TestHarness
             OpenDeckCommand = new DelegateCommand(OpenDeck);
             ImportFromClipboardCommand = new DelegateCommand(ImportFromClipboard);
             ExportToClipboardCommand = new DelegateCommand(ExportToClipboard);
+            CustomRoleCommand = new DelegateCommand(AddCustomRole);
 
             DeckBuilderVm = new DeckBuilderViewModel();
 
@@ -140,6 +142,11 @@ namespace TestHarness
         public void ExportToClipboard()
         {
             DeckBuilderVm.ExportToClipboard();
+        }
+
+        public void AddCustomRole()
+        {
+            DeckBuilderVm.AddCustomRole();
         }
     }
 }
