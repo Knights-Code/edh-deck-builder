@@ -93,6 +93,8 @@ namespace EdhDeckBuilder.Service
 
         public CardModel TryGetCard(string name)
         {
+            if (string.IsNullOrEmpty(name)) return null;
+                
             if (!_initialised) Initialise();
 
             var nameAsKey = name.ToLower();

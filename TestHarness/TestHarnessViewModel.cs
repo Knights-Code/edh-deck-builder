@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace TestHarness
 {
@@ -30,6 +31,18 @@ namespace TestHarness
             set { SetProperty(ref _cards, value); }
         }
 
+        public void TryPreview()
+        {
+            TextBoxHovered = true;
+            DeckBuilderVm.TryPreview(NewCardName);
+        }
+
+        public void ClearPreview()
+        {
+            TextBoxHovered = false;
+            DeckBuilderVm.ClearPreview();
+        }
+
         private CardViewModel _selectedCard;
         public CardViewModel SelectedCard
         {
@@ -42,6 +55,25 @@ namespace TestHarness
         {
             get { return _newCardName; }
             set { SetProperty(ref _newCardName, value); }
+        }
+
+        private bool _textBoxHovered;
+        public bool TextBoxHovered
+        {
+            get { return _textBoxHovered; }
+            set
+            {
+                SetProperty(ref _textBoxHovered, value);
+                RaisePropertyChanged(nameof(TextBoxBackground));
+            }
+        }
+
+        public SolidColorBrush TextBoxBackground
+        {
+            get
+            {
+                return TextBoxHovered ? new SolidColorBrush(Colors.LightGray) : new SolidColorBrush(Colors.White);
+            }
         }
 
         #region Menu Commands
@@ -92,7 +124,7 @@ namespace TestHarness
 
         public void AddNewCard()
         {
-            DeckBuilderVm.AddCard(NewCardName);
+            if (DeckBuilderVm.AddCard(NewCardName)) NewCardName = string.Empty;
         }
 
         public void SaveDeckAs()

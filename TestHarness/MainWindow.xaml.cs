@@ -25,5 +25,17 @@ namespace TestHarness
             InitializeComponent();
             DataContext = new TestHarnessViewModel();
         }
+
+        private void TextBox_MouseEnter(object sender, MouseEventArgs e)
+        {
+            var vm = DataContext as TestHarnessViewModel;
+            vm.TryPreview();
+        }
+
+        private void TextBox_MouseLeave(object sender, MouseEventArgs e)
+        {
+            var vm = DataContext as TestHarnessViewModel;
+            vm.ClearPreview();
+        }
     }
 }

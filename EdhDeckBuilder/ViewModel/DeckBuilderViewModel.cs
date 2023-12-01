@@ -41,6 +41,16 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        public void ClearPreview()
+        {
+            HoveredCardVm = null;
+        }
+
+        public void TryPreview(string previewCardName)
+        {
+            var previewCard = _cardProvider.TryGetCard(previewCardName);
+            if (previewCard != null) HoveredCardVm = new CardViewModel(previewCard);
+        }
 
         private ObservableCollection<CardViewModel> _cardVms = new ObservableCollection<CardViewModel>();
         public ObservableCollection<CardViewModel> CardVms
