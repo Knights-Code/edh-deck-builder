@@ -26,7 +26,10 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <TextBox Grid.Row="0" Text="{Binding NewCardName, UpdateSourceTrigger=PropertyChanged}" >
+            <TextBox Grid.Row="0"
+                     Background="{Binding TextBoxBackground}"
+                     Text="{Binding NewCardName, UpdateSourceTrigger=PropertyChanged}"
+                     MouseEnter="TextBox_MouseEnter" MouseLeave="TextBox_MouseLeave" >
                 <TextBox.InputBindings>
                     <KeyBinding Command="{Binding NewCardEnterCommand}" Key="Return" />
                 </TextBox.InputBindings>
