@@ -29,6 +29,7 @@ namespace EdhDeckBuilder.View
         private void CardView_MouseEnter(object sender, MouseEventArgs e)
         {
             var cardView = sender as CardView;
+            cardView.Focus();
             var cardVm = cardView.DataContext as CardViewModel;
             cardVm.Hovered = true;
 

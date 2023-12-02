@@ -36,6 +36,10 @@ namespace EdhDeckBuilder.ViewModel
             get { return _hoveredCardVm; }
             set
             {
+                //if (value != null && value.CardImage == null)
+                //{
+                //    value.CardImage = _cardProvider.GetCardImage(value.Name);
+                //}
                 SetProperty(ref _hoveredCardVm, value);
             }
         }

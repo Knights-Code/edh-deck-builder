@@ -109,33 +109,42 @@ namespace EdhDeckBuilder.Service
         }
 
         /// <summary>
-        /// Retrieves a card image from MTG Gatherer.
+        /// Retrieves a card image from memory if cached, or from the web otherwise.
         /// </summary>
         /// <param name="cardModel">The card to retrieve the image for.</param>
-        /// <returns></returns>
-        public Image DownloadImageForCard(string cardName)
+        /// <param name="back">If true, retrieves image for back of card, otherwise retrieves the front of the card.</param>
+        /// <returns>Image of the card front or card back.</returns>
+        public Image GetCardImage(string cardName, bool back = false)
         {
             CardModel cardModel;
             cardModel = TryGetCard(cardName);
             if (cardModel == null) return null;
 
-            if (cardModel.CardImage != null) return cardModel.CardImage;
+            if (!back && cardModel.CardImage != null) return cardModel.CardImage;
+            else if (back && cardModel.BackImage != null) return cardModel.BackImage;
 
             if (!cardModel.HasDownloadableImage) return null;
 
-            var scryfallFrontUrl = cardModel.BuildScryfallUrl();
-            var scryfallBackUrl = cardModel.BuildScryfallUrl(true);
             var gathererUrl = cardModel.BuildGathererUrl();
-            var hasScryfallFrontUrl = !string.IsNullOrEmpty(scryfallFrontUrl);
-            var hasScryfallBackUrl = !string.IsNullOrEmpty(scryfallBackUrl);
 
-            var image = DownloadImage(hasScryfallFrontUrl ? scryfallFrontUrl : gathererUrl);
-            var backImage = hasScryfallBackUrl ? DownloadImage(scryfallBackUrl) : null;
+            if (cardModel.CardImage == null)
+            {
+                var scryfallFrontUrl = cardModel.BuildScryfallUrl();
+                var hasScryfallFrontUrl = !string.IsNullOrEmpty(scryfallFrontUrl);
+                var image = DownloadImage(hasScryfallFrontUrl ? scryfallFrontUrl : gathererUrl);
+                cardModel.CardImage = image;
+            }
 
-            cardModel.CardImage = image;
-            cardModel.BackImage = backImage ?? _cardBack;
+            if (cardModel.BackImage == null)
+            {
+                var scryfallBackUrl = cardModel.BuildScryfallUrl(true);
+                var hasScryfallBackUrl = !string.IsNullOrEmpty(scryfallBackUrl);
+                var backImage = hasScryfallBackUrl ? DownloadImage(scryfallBackUrl) : null;
+                cardModel.BackImage = backImage ?? _cardBack;
+            }
 
-            return image;
+            // Should have non-null values for both front and back now.
+            return back ? cardModel.BackImage : cardModel.CardImage;
         }
 
         private Image DownloadImage(string url)

@@ -8,7 +8,10 @@
              xmlns:converters="clr-namespace:EdhDeckBuilder.View.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
-             d:DataContext="{d:DesignData CardViewModel, IsDesignTimeCreatable=False}">
+             d:DataContext="{d:DesignData CardViewModel, IsDesignTimeCreatable=False}"
+             Focusable="True"
+             KeyDown="CardView_KeyDown"
+             KeyUp="CardView_KeyUp">
     <UserControl.Resources>
         <converters:TextIntegerConverter x:Key="NumberConverter" EmptyStringValue="0"/>
     </UserControl.Resources>

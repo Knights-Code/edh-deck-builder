@@ -40,7 +40,7 @@ namespace EdhDeckBuilder.Tests
         [Test]
         public void DownloadImageForCardTest()
         {
-            var image = _cardProvider.DownloadImageForCard("Ancestor's Chosen");
+            var image = _cardProvider.GetCardImage("Ancestor's Chosen");
 
             Assert.NotNull(image);
         }

@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace EdhDeckBuilder.ViewModel
@@ -22,12 +23,14 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _name, value); }
         }
 
-        private Image _cardImage;
         public Image CardImage
         {
-            get { return _cardImage; }
-            set { SetProperty(ref _cardImage, value); }
+            get { return Keyboard.IsKeyDown(Key.LeftShift) ? BackImage : FrontImage; }
         }
+
+        public Image FrontImage { get; set; }
+
+        public Image BackImage { get; set; }
 
         private int _numCopies;
         public int NumCopies
@@ -65,6 +68,11 @@ namespace EdhDeckBuilder.ViewModel
 
         public int NumRoles => RoleVms.Count;
 
+        public void RefreshCardImage()
+        {
+            RaisePropertyChanged(nameof(CardImage));
+        }
+
         private ObservableCollection<RoleViewModel> _roleVms;
         public ObservableCollection<RoleViewModel> RoleVms
         {
@@ -75,7 +83,8 @@ namespace EdhDeckBuilder.ViewModel
         public CardViewModel(CardModel model, List<string> customRoles = null)
         {
             _name = model.Name;
-            _cardImage = model.CardImage;
+            FrontImage = model.CardImage;
+            BackImage = model.BackImage;
             _numCopies = model.NumCopies > 0 ? model.NumCopies : 1;
             _roleVms = new ObservableCollection<RoleViewModel>();
 

@@ -24,6 +24,8 @@ namespace EdhDeckBuilder.View
         public CardView()
         {
             InitializeComponent();
+            //KeyDown += CardView_KeyDown;
+            //KeyUp += CardView_KeyUp;
         }
 
         private void CardView_KeyDown(object sender, KeyEventArgs e)
