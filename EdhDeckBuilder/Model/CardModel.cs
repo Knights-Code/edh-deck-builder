@@ -13,6 +13,7 @@ namespace EdhDeckBuilder.Model
         public string MultiverseId { get; set; }
         public string ScryfallId { get; set; }
         public Image CardImage { get; set; } = null;
+        public Image BackImage { get; set; } = null;
         public int NumCopies { get; set; }
         public List<RoleModel> Roles { get; set; }
         public bool HasDownloadableImage => !string.IsNullOrEmpty(ScryfallId) || !string.IsNullOrEmpty(MultiverseId);
@@ -29,13 +30,13 @@ namespace EdhDeckBuilder.Model
             return $"https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={MultiverseId}&type=card";
         }
 
-        public string BuildScryfallUrl()
+        public string BuildScryfallUrl(bool back = false)
         {
             if (string.IsNullOrEmpty(ScryfallId)) return string.Empty;
 
             var firstChar = ScryfallId[0];
             var secondChar = ScryfallId[1];
-            return $"https://cards.scryfall.io/large/front/{firstChar}/{secondChar}/{ScryfallId}.jpg";
+            return $"https://cards.scryfall.io/large/{(back ? "back" : "front")}/{firstChar}/{secondChar}/{ScryfallId}.jpg";
         }
 
         public string ClipboardFormat()

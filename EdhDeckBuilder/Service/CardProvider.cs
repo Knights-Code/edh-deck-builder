@@ -18,6 +18,7 @@ namespace EdhDeckBuilder.Service
     {
         private bool _initialised = false;
         private readonly Dictionary<string, CardModel> _cards;
+        private Image _cardBack = null;
         public CardProvider()
         {
             _cards = new Dictionary<string, CardModel>();
@@ -25,6 +26,9 @@ namespace EdhDeckBuilder.Service
 
         public void Initialise()
         {
+            // Download generic card back.
+            _cardBack = DownloadImage("https://s3.amazonaws.com/ccg-corporate-production/news-images/Back0_Sheet%20(F)20201203163456929.jpg");
+
             // Initialise database.
             var multiverseAndScryfallIdsByUuid = new Dictionary<string, Tuple<string, string>>();
             var cardIdentifiersPath = @"C:\Users\pugtu\Documents\Games\Magic The Gathering\CSVCardDatabase\cardIdentifiers.csv";
@@ -119,19 +123,40 @@ namespace EdhDeckBuilder.Service
 
             if (!cardModel.HasDownloadableImage) return null;
 
-            var client = new WebClient();
-            var scryfallUrl = cardModel.BuildScryfallUrl();
+            var scryfallFrontUrl = cardModel.BuildScryfallUrl();
+            var scryfallBackUrl = cardModel.BuildScryfallUrl(true);
             var gathererUrl = cardModel.BuildGathererUrl();
-            var imageData = client.DownloadData(!string.IsNullOrEmpty(scryfallUrl) ? scryfallUrl : gathererUrl);
+            var hasScryfallFrontUrl = !string.IsNullOrEmpty(scryfallFrontUrl);
+            var hasScryfallBackUrl = !string.IsNullOrEmpty(scryfallBackUrl);
 
-            Image image;
-
-            using (var memoryStream = new MemoryStream(imageData))
-            {
-                image = Image.FromStream(memoryStream);
-            }
+            var image = DownloadImage(hasScryfallFrontUrl ? scryfallFrontUrl : gathererUrl);
+            var backImage = hasScryfallBackUrl ? DownloadImage(scryfallBackUrl) : null;
 
             cardModel.CardImage = image;
+            cardModel.BackImage = backImage ?? _cardBack;
+
+            return image;
+        }
+
+        private Image DownloadImage(string url)
+        {
+            var client = new WebClient();
+
+            Image image = null;
+            try
+            {
+                var imageData = client.DownloadData(url);
+
+                using (var memoryStream = new MemoryStream(imageData))
+                {
+                    image = Image.FromStream(memoryStream);
+                }
+            }
+            catch (WebException)
+            {
+                // Unable to connect but it might just be a bad URL.
+                // Do nothing.
+            }
 
             return image;
         }
