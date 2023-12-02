@@ -1,6 +1,8 @@
 ﻿using EdhDeckBuilder.Model;
 using EdhDeckBuilder.Service;
 using EdhDeckBuilder.Service.Clipboard;
+using EdhDeckBuilder.Tests.ViewModel;
+using EdhDeckBuilder.View;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -460,6 +462,15 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             return result;
+        }
+
+        public void DecklistDiff()
+        {
+            var decklistDiffWindow = new DecklistDiffWindow();
+            var decklistDiffVm = new DecklistDiffViewModel($"Decklist Diff for {Name}", ToModel());
+
+            decklistDiffWindow.DataContext = decklistDiffVm;
+            decklistDiffWindow.Show();
         }
 
         public DeckModel ToModel()

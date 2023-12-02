@@ -92,6 +92,8 @@ namespace TestHarness
 
         public ICommand CleanUpCommand { get; set; }
 
+        public ICommand DecklistDiffCommand { get; set; }
+
         public TestHarnessViewModel()
         {
             NewCardEnterCommand = new DelegateCommand(AddNewCard, () => !string.IsNullOrEmpty(NewCardName));
@@ -106,6 +108,7 @@ namespace TestHarness
             CustomRoleCommand = new DelegateCommand(AddCustomRole);
             SortCardsCommand = new DelegateCommand(SortCards, () => DeckBuilderVm.CardVms.Any());
             CleanUpCommand = new DelegateCommand(CleanUp, () => DeckBuilderVm.CardVms.Any());
+            DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
 
             DeckBuilderVm = new DeckBuilderViewModel();
 
@@ -163,6 +166,11 @@ namespace TestHarness
         public void CleanUp()
         {
             DeckBuilderVm.CleanUp();
+        }
+
+        public void DecklistDiff()
+        {
+            DeckBuilderVm.DecklistDiff();
         }
     }
 }

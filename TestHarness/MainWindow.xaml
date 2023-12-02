@@ -7,6 +7,8 @@
         xmlns:edhdeckbuilder="clr-namespace:EdhDeckBuilder;assembly=EdhDeckBuilder"
         xmlns:view="clr-namespace:EdhDeckBuilder.View;assembly=EdhDeckBuilder"
         mc:Ignorable="d"
+        WindowState="Maximized"
+        WindowStartupLocation="Manual"
         Title="Test Harness" Height="450" Width="800">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -21,6 +23,7 @@
                 <MenuItem Header="Export to Clipboard" Command="{Binding ExportToClipboardCommand}" />
                 <MenuItem Header="Sort" Command="{Binding SortCardsCommand}" />
                 <MenuItem Header="Clean Up" Command="{Binding CleanUpCommand}" />
+                <MenuItem Header="Decklist Diff" Command="{Binding DecklistDiffCommand}" />
             </MenuItem>
             <MenuItem Header="_Roles">
                 <MenuItem Header="Custom Role" Command="{Binding CustomRoleCommand}" />

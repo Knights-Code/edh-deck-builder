@@ -96,6 +96,7 @@
     <Compile Include="Tests\UtilityFunctionsTests.cs" />
     <Compile Include="Tests\ViewModel\CardViewModelTests.cs" />
     <Compile Include="Tests\ViewModel\DeckBuilderViewModelTests.cs" />
+    <Compile Include="Tests\ViewModel\DecklistDiffViewModel.cs" />
     <Compile Include="ViewModel\DeckBuilderViewModel.cs" />
     <Compile Include="ViewModel\RoleViewModel.cs" />
     <Compile Include="ViewModel\TemplateViewModel.cs" />
@@ -115,6 +116,9 @@
       <DependentUpon>DeckBuilderView.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\Converters\ImageToBitmapSourceConverter.cs" />
+    <Compile Include="View\DecklistDiffWindow.xaml.cs">
+      <DependentUpon>DecklistDiffWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\RoleView.xaml.cs">
       <DependentUpon>RoleView.xaml</DependentUpon>
     </Compile>
@@ -142,6 +146,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\DeckBuilderView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\DecklistDiffWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
