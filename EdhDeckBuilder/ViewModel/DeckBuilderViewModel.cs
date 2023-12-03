@@ -48,7 +48,13 @@ namespace EdhDeckBuilder.ViewModel
         public void TryPreview(string previewCardName)
         {
             var previewCard = _cardProvider.TryGetCard(previewCardName);
-            if (previewCard != null) HoveredCardVm = new CardViewModel(previewCard);
+
+            if (previewCard != null)
+            {
+                var previewVm = new CardViewModel(previewCard);
+                AddImagesToCard(previewVm);
+                HoveredCardVm = previewVm;
+            }
         }
 
         private ObservableCollection<CardViewModel> _cardVms = new ObservableCollection<CardViewModel>();
@@ -143,16 +149,7 @@ namespace EdhDeckBuilder.ViewModel
 
             var cardVm = new CardViewModel(cardModel, customRoles);
 
-            if (cardVm.FrontImage == null)
-            {
-                cardVm.FrontImage = _cardProvider.GetCardImage(cardModel.Name);
-            }
-
-            if (cardVm.BackImage == null)
-            {
-                cardVm.BackImage = _cardProvider.GetCardImage(cardModel.Name, true);
-            }
-
+            AddImagesToCard(cardVm);
             cardVm.PropertyChanged += CardVm_PropertyChanged;
             cardVm.RoleUpdated += CardVm_RoleUpdated;
             CardVms.Add(cardVm);
@@ -161,6 +158,19 @@ namespace EdhDeckBuilder.ViewModel
             RaisePropertyChanged(nameof(TotalCards));
 
             return true;
+        }
+
+        private void AddImagesToCard(CardViewModel cardVm)
+        {
+            if (cardVm.FrontImage == null)
+            {
+                cardVm.FrontImage = _cardProvider.GetCardImage(cardVm.Name);
+            }
+
+            if (cardVm.BackImage == null)
+            {
+                cardVm.BackImage = _cardProvider.GetCardImage(cardVm.Name, true);
+            }
         }
 
         public void SaveDeckAs()

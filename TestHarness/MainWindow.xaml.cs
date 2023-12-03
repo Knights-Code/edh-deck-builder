@@ -37,5 +37,31 @@ namespace TestHarness
             var vm = DataContext as TestHarnessViewModel;
             vm.ClearPreview();
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            var key = e.Key;
+
+            if (key != Key.LeftShift) return;
+
+            var vm = DataContext as TestHarnessViewModel;
+
+            if (vm.DeckBuilderVm.HoveredCardVm == null) return;
+
+            vm.DeckBuilderVm.HoveredCardVm.RefreshCardImage();
+        }
+
+        private void Window_KeyUp(object sender, KeyEventArgs e)
+        {
+            var key = e.Key;
+
+            if (key != Key.LeftShift) return;
+
+            var vm = DataContext as TestHarnessViewModel;
+
+            if (vm.DeckBuilderVm.HoveredCardVm == null) return;
+
+            vm.DeckBuilderVm.HoveredCardVm.RefreshCardImage();
+        }
     }
 }
