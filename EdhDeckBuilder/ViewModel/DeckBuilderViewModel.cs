@@ -124,11 +124,11 @@ namespace EdhDeckBuilder.ViewModel
 
         public bool AddCard(string cardName, int numCopies = 1, List<string> customRoles = null)
         {
-            if (CardVms.Any(vm => vm.Name == cardName)) return false; // Don't add dupes.
-
             var cardModel = _cardProvider.TryGetCard(cardName);
 
             if (cardModel == null) return false;
+
+            if (CardVms.Any(vm => vm.Name == cardModel.Name)) return false; // Don't add dupes.
 
             // Load roles from role DB.
             var cardRoles = _roleProvider.GetRolesForCard(cardModel.Name);
@@ -185,6 +185,9 @@ namespace EdhDeckBuilder.ViewModel
         {
             // TODO: Check for unsaved changes.
             Reset();
+            // Reset deck file path so as not to overwrite existing deck
+            // with new one.
+            SettingsProvider.UpdateDeckFilePath(string.Empty);
         }
 
         private void Reset()
@@ -197,8 +200,8 @@ namespace EdhDeckBuilder.ViewModel
 
             CardVms.Clear();
             TemplateVms.Clear();
-            SetUpDefaultTemplateAndRoles();
 
+            SetUpDefaultTemplateAndRoles();
             Name = _defaultDeckName;
         }
 
@@ -349,6 +352,7 @@ namespace EdhDeckBuilder.ViewModel
             var newVm = new TemplateViewModel(new TemplateModel(name, min, max));
             newVm.HighlightButtonClicked += RoleHeader_OnHighlightButtonClicked;
             TemplateVms.Add(newVm);
+            RaisePropertyChanged(nameof(NumRoles));
         }
 
         private readonly Dictionary<string, bool> _highlightedRoles = new Dictionary<string, bool>();

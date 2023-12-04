@@ -100,7 +100,9 @@ namespace EdhDeckBuilder.ViewModel
 
             foreach (var roleModel in model.Roles)
             {
-                var roleVm = _roleVms.First(vm => vm.Name == roleModel.Name);
+                var roleVm = _roleVms.FirstOrDefault(vm => vm.Name == roleModel.Name);
+
+                if (roleVm == null) continue; // This can happen if the role model is a custom role not used by this deck.
 
                 if (!roleModel.Applies) continue;
 

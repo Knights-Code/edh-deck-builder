@@ -86,6 +86,38 @@ namespace EdhDeckBuilder.Tests.Model
         }
 
         [Test]
+        public void SaveDeck_WhenCardHasCommaInNameAndIsDoubleFaced_PutsNameInQuotes()
+        {
+            var deckProvider = new DeckProvider();
+            var deckModel = new DeckModel("Test Deck");
+            var card1 = new CardModel
+            {
+                Name = "Ojer Axonil, Deepest Might // Temple of Power",
+                NumCopies = 1
+            };
+            var card2 = new CardModel
+            {
+                Name = "Ghalta, Primal Hunger",
+                NumCopies = 1
+            };
+            var card3 = new CardModel
+            {
+                Name = "Forest",
+                NumCopies = 10
+            };
+
+            deckModel.AddCards(new List<CardModel> { card1, card2, card3 });
+
+            deckProvider.SaveDeck(deckModel, _testDeckFilename);
+
+            using (var reader = new StreamReader(_testDeckFilename))
+            {
+                var fileText = reader.ReadToEnd();
+                Assert.AreEqual("Test Deck,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland\r\n1,\"Ojer Axonil, Deepest Might // Temple of Power\"\r\n1,\"Ghalta, Primal Hunger\"\r\n10,Forest\r\n", fileText);
+            }
+        }
+
+        [Test]
         public void LoadDeck_WhenGivenFilePathWithDeckWithCustomRoles_LoadsCorrectly()
         {
             using (var writer = new StreamWriter(new FileStream(_testDeckFilename, FileMode.OpenOrCreate)))

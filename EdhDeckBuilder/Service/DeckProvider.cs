@@ -6,6 +6,7 @@ using Microsoft.VisualBasic.FileIO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace EdhDeckBuilder.Service
 {
@@ -23,26 +24,42 @@ namespace EdhDeckBuilder.Service
         {
             if (File.Exists(deckFilePath))
             {
-                File.Delete(deckFilePath);
+                try
+                {
+                    File.Delete(deckFilePath);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Unable to overwrite existing file.\n\n{e.Message}");
+                }
             }
 
-            using (var writer = new StreamWriter(new FileStream(deckFilePath, FileMode.OpenOrCreate)))
+            try
             {
-                writer.Write($"{deckModel.Name},");
-                writer.Write(string.Join(",", TemplatesAndDefaults.DefaultRoleSet().Select(role => role.CsvFormat())));
-
-                if (deckModel.CustomRoles.Any())
+                using (var writer = new StreamWriter(new FileStream(deckFilePath, FileMode.OpenOrCreate)))
                 {
-                    writer.Write(",");
-                    writer.WriteLine(string.Join(",", deckModel.CustomRoles.Select(role => role.CsvFormat())));
-                }
+                    writer.Write($"{deckModel.Name},");
+                    writer.Write(string.Join(",", TemplatesAndDefaults.DefaultRoleSet().Select(role => role.CsvFormat())));
 
-                foreach (var cardModel in deckModel.Cards)
-                {
-                    if (cardModel.NumCopies == 0) continue;
+                    if (deckModel.CustomRoles.Any())
+                    {
+                        writer.Write(",");
+                        writer.Write(string.Join(",", deckModel.CustomRoles.Select(role => role.CsvFormat())));
+                    }
 
-                    writer.WriteLine($"{cardModel.NumCopies},{cardModel.Name.CsvFormat()}");
+                    writer.WriteLine();
+
+                    foreach (var cardModel in deckModel.Cards)
+                    {
+                        if (cardModel.NumCopies == 0) continue;
+
+                        writer.WriteLine($"{cardModel.NumCopies},{cardModel.Name.CsvFormat()}");
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Unable to save deck.\n\n{e.Message}");
             }
         }
 
