@@ -80,7 +80,7 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _roleVms, value); }
         }
 
-        public CardViewModel(CardModel model, List<string> customRoles = null)
+        public CardViewModel(CardModel model, List<string> customRoles = null, List<RoleModel> roleRankings = null)
         {
             _name = model.Name;
             FrontImage = model.CardImage;
@@ -103,6 +103,13 @@ namespace EdhDeckBuilder.ViewModel
                 var roleVm = _roleVms.FirstOrDefault(vm => vm.Name == roleModel.Name);
 
                 if (roleVm == null) continue; // This can happen if the role model is a custom role not used by this deck.
+
+                if (roleRankings != null)
+                {
+                    var rankingForRole = roleRankings.FirstOrDefault(rr => rr.Name == roleVm.Name);
+
+                    if (rankingForRole != null) roleVm.Value = rankingForRole.Value;
+                }
 
                 if (!roleModel.Applies) continue;
 

@@ -1,0 +1,36 @@
+﻿<Window x:Class="EdhDeckBuilder.View.RoleRankingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EdhDeckBuilder.View"
+        mc:Ignorable="d"
+        Title="RoleRankingWindow" Height="550" Width="600"
+        WindowStartupLocation="CenterScreen"
+        d:DataContext="{d:DesignData RoleRankingViewModel, IsDesignTimeCreatable=False}"
+        KeyDown="Window_KeyDown"
+        KeyUp="Window_KeyUp"
+        x:Name="RoleRanksWindow">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <ListBox
+            Grid.Column="0"
+            ItemsSource="{Binding Cards}" SelectedItem="{Binding SelectedCard}"
+            SelectedIndex="{Binding SelectedIndex}"
+            Focusable="True"
+            Name="CardList"
+            PreviewKeyDown="CardList_PreviewKeyDown">
+            <ListBox.InputBindings>
+                <KeyBinding Command="{Binding MoveUpCommand}" Gesture="CTRL+Up" />
+                <KeyBinding Command="{Binding MoveDownCommand}" Gesture="CTRL+Down" />
+                <KeyBinding Command="{Binding SaveAndCloseCommand, Mode=OneWay}"
+                            Key="Return" 
+                            CommandParameter="{Binding ElementName=RoleRanksWindow}" />
+            </ListBox.InputBindings>
+        </ListBox>
+        <local:CardImageView Grid.Column="1" DataContext="{Binding SelectedCard}" />
+    </Grid>
+</Window>

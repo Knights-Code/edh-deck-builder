@@ -122,7 +122,7 @@ namespace EdhDeckBuilder.ViewModel
             return CardVms.Sum(vm => vm.NumCopies);
         }
 
-        public bool AddCard(string cardName, int numCopies = 1, List<string> customRoles = null)
+        public bool AddCard(string cardName, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null)
         {
             var cardModel = _cardProvider.TryGetCard(cardName);
 
@@ -142,12 +142,12 @@ namespace EdhDeckBuilder.ViewModel
 
             var deckBuilderVmCustomRoles = GetCustomRoles();
 
-            if (customRoles == null && deckBuilderVmCustomRoles.Any())
+            if (deckRoles == null && deckBuilderVmCustomRoles.Any())
             {
-                customRoles = deckBuilderVmCustomRoles;
+                deckRoles = deckBuilderVmCustomRoles;
             }
 
-            var cardVm = new CardViewModel(cardModel, customRoles);
+            var cardVm = new CardViewModel(cardModel, deckRoles, cardRoleRankings);
 
             AddImagesToCard(cardVm);
             cardVm.PropertyChanged += CardVm_PropertyChanged;
@@ -344,7 +344,7 @@ namespace EdhDeckBuilder.ViewModel
             // Add cards.
             foreach (var cardModel in deckModel.Cards)
             {
-                AddCard(cardModel.Name, cardModel.NumCopies, deckModel.CustomRoles);
+                AddCard(cardModel.Name, cardModel.NumCopies, cardModel.Roles, deckModel.CustomRoles);
             }
         }
 
@@ -486,6 +486,52 @@ namespace EdhDeckBuilder.ViewModel
 
             decklistDiffWindow.DataContext = decklistDiffVm;
             decklistDiffWindow.Show();
+        }
+
+        private string GetHighlightedRole()
+        {
+            if (TemplateVms.Count(vm => vm.Highlighted) != 1) return null;
+
+            return TemplateVms.First(vm => vm.Highlighted).Role;
+        }
+
+        public void RoleRankings()
+        {
+            // Get relevant role.
+            var highlightedRole = GetHighlightedRole();
+            if (string.IsNullOrEmpty(highlightedRole)) return;
+
+            // Get applicable cards.
+            var cardsWithRole = CardVms.Where(card => card.RoleVms.Any(role => role.Name == highlightedRole && role.Applies))
+                .OrderBy(card => card.RoleVms.First(role => role.Name == highlightedRole).Value)
+                .ToList();
+
+            if (!cardsWithRole.Any()) return;
+
+            var roleRankingsWindow = new RoleRankingWindow();
+            roleRankingsWindow.Closing += RoleRankingsWindow_Closing;
+            var roleRankingsVm = new RoleRankingsViewModel(cardsWithRole, highlightedRole);
+
+            roleRankingsWindow.DataContext = roleRankingsVm;
+            roleRankingsWindow.Show();
+        }
+
+        private void RoleRankingsWindow_Closing(object sender, CancelEventArgs e)
+        {
+            var roleRankingsVm = (sender as RoleRankingWindow).DataContext as RoleRankingsViewModel;
+
+            // Update rankings.
+            foreach (var roleRankedCard in roleRankingsVm.Cards)
+            {
+                var cardVm = CardVms.FirstOrDefault(card => card.Name == roleRankedCard.Name);
+
+                if (cardVm == null) return;
+
+                var rankedRole = roleRankedCard.RoleVms.First(role => role.Name == roleRankingsVm.Role);
+                var roleToUpdate = cardVm.RoleVms.First(role => role.Name == roleRankingsVm.Role);
+
+                roleToUpdate.Value = rankedRole.Value;
+            }
         }
 
         public DeckModel ToModel()

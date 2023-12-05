@@ -98,6 +98,7 @@
     <Compile Include="Tests\ViewModel\DeckBuilderViewModelTests.cs" />
     <Compile Include="Tests\ViewModel\DecklistDiffViewModel.cs" />
     <Compile Include="ViewModel\DeckBuilderViewModel.cs" />
+    <Compile Include="ViewModel\RoleRankingsViewModel.cs" />
     <Compile Include="ViewModel\RoleViewModel.cs" />
     <Compile Include="ViewModel\TemplateViewModel.cs" />
     <Compile Include="Model\CardModel.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="View\CardView.xaml.cs">
       <DependentUpon>CardView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\Controls\KeyboardNavigableListBox.cs" />
     <Compile Include="View\Converters\TextIntegerConverter.cs" />
     <Compile Include="View\DeckBuilderView.xaml.cs">
       <DependentUpon>DeckBuilderView.xaml</DependentUpon>
@@ -118,6 +120,9 @@
     <Compile Include="View\Converters\ImageToBitmapSourceConverter.cs" />
     <Compile Include="View\DecklistDiffWindow.xaml.cs">
       <DependentUpon>DecklistDiffWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\RoleRankingWindow.xaml.cs">
+      <DependentUpon>RoleRankingWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\RoleView.xaml.cs">
       <DependentUpon>RoleView.xaml</DependentUpon>
@@ -150,6 +155,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\DecklistDiffWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\RoleRankingWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -204,5 +204,45 @@ namespace EdhDeckBuilder.Tests.Model
             Assert.AreEqual(1, ghalta.NumCopies);
             Assert.AreEqual(10, forest.NumCopies);
         }
+
+        [Test]
+        public void SaveDeck_WhenCardsHaveRoleRankings_SavesDeckThenLoadsDeckCorrectly()
+        {
+            var deckProvider = new DeckProvider();
+            var deckModel = new DeckModel("Test Deck");
+            var card1 = new CardModel
+            {
+                Name = "Skullclamp",
+                NumCopies = 1,
+                Roles = new List<RoleModel> { new RoleModel("Draw", 2) }
+            };
+            var card2 = new CardModel
+            {
+                Name = "Ghalta, Primal Hunger",
+                NumCopies = 1,
+                Roles = new List<RoleModel> { new RoleModel("Dinosaur", 5) }
+            };
+            var card3 = new CardModel
+            {
+                Name = "Forest",
+                NumCopies = 10
+            };
+
+            deckModel.CustomRoles.Add("Dinosaur");
+            deckModel.AddCards(new List<CardModel> { card1, card2, card3 });
+
+            deckProvider.SaveDeck(deckModel, _testDeckFilename);
+            var loadedDeck = deckProvider.LoadDeck(_testDeckFilename);
+
+            var skullclamp = loadedDeck.Cards.FirstOrDefault(c => c.Name == "Skullclamp");
+            var ghalta = loadedDeck.Cards.FirstOrDefault(c => c.Name == "Ghalta, Primal Hunger");
+            var forest = loadedDeck.Cards.FirstOrDefault(c => c.Name == "Forest");
+            var drawRole = skullclamp.Roles.FirstOrDefault(r => r.Name == "Draw");
+            var dinosaurRole = ghalta.Roles.FirstOrDefault(r => r.Name == "Dinosaur");
+            Assert.NotNull(drawRole);
+            Assert.NotNull(dinosaurRole);
+            Assert.AreEqual(2, drawRole.Value);
+            Assert.AreEqual(5, dinosaurRole.Value);
+        }
     }
 }
