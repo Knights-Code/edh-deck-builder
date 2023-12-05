@@ -26,6 +26,7 @@
                 <MenuItem Header="Sort" Command="{Binding SortCardsCommand}" />
                 <MenuItem Header="Clean Up" Command="{Binding CleanUpCommand}" />
                 <MenuItem Header="Decklist Diff" Command="{Binding DecklistDiffCommand}" />
+                <MenuItem Header="Role Rankings" Command="{Binding RoleRankingsCommand}" />
             </MenuItem>
             <MenuItem Header="_Roles">
                 <MenuItem Header="Custom Role" Command="{Binding CustomRoleCommand}" />

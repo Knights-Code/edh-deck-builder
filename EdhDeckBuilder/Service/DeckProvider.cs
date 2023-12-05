@@ -38,8 +38,10 @@ namespace EdhDeckBuilder.Service
             {
                 using (var writer = new StreamWriter(new FileStream(deckFilePath, FileMode.OpenOrCreate)))
                 {
-                    writer.Write($"{deckModel.Name},");
-                    writer.Write(string.Join(",", TemplatesAndDefaults.DefaultRoleSet().Select(role => role.CsvFormat())));
+                    writer.Write($"{deckModel.Name},,"); // Need extra comma for card name column.
+
+                    var defaultRoles = TemplatesAndDefaults.DefaultRoleSet();
+                    writer.Write(string.Join(",", defaultRoles.Select(role => role.CsvFormat())));
 
                     if (deckModel.CustomRoles.Any())
                     {
@@ -49,11 +51,27 @@ namespace EdhDeckBuilder.Service
 
                     writer.WriteLine();
 
+                    var allRoles = new List<string>();
+                    allRoles.AddRange(defaultRoles);
+                    allRoles.AddRange(deckModel.CustomRoles);
+
                     foreach (var cardModel in deckModel.Cards)
                     {
                         if (cardModel.NumCopies == 0) continue;
 
-                        writer.WriteLine($"{cardModel.NumCopies},{cardModel.Name.CsvFormat()}");
+                        writer.Write($"{cardModel.NumCopies},{cardModel.Name.CsvFormat()}");
+
+                        foreach (var role in allRoles)
+                        {
+                            writer.Write(",");
+                            var roleModel = cardModel.Roles.FirstOrDefault(r => r.Name == role);
+
+                            if (roleModel == null || !roleModel.Applies) continue;
+
+                            writer.Write($"{roleModel.Value}");
+                        }
+
+                        writer.WriteLine();
                     }
                 }
             }
@@ -83,12 +101,13 @@ namespace EdhDeckBuilder.Service
                 // Load custom roles, if any.
                 foreach (var item in deckLine)
                 {
-                    if (item == deckName) continue;
+                    if (item == deckName || string.IsNullOrEmpty(item)) continue;
                     if (TemplatesAndDefaults.DefaultRoleSet().Contains(item)) continue;
 
                     result.CustomRoles.Add(item);
                 }
 
+                // Now read cards.
                 var cards = new List<CardModel>();
 
                 while (!csvParser.EndOfData)
@@ -97,9 +116,27 @@ namespace EdhDeckBuilder.Service
                     var numCopies = fields[0];
                     var name = fields[1];
 
-                    if (!int.TryParse(numCopies, out int intNumCopies)) throw new InvalidDataException();
+                    if (!int.TryParse(numCopies, out int intNumCopies)) throw new InvalidDataException($"Invalid value for number of copies for card named {name}. Value needs to be a number, but was {fields[0]}.");
 
-                    cards.Add(new CardModel { Name = name, NumCopies = intNumCopies });
+                    var newCard = new CardModel { Name = name, NumCopies = intNumCopies };
+
+                    // Read role rankings, if any.
+                    var allRoles = TemplatesAndDefaults.DefaultRoleSet();
+                    allRoles.AddRange(result.CustomRoles);
+
+                    for (int i = 2; i < allRoles.Count + 2; i++)
+                    {
+                        if (string.IsNullOrEmpty(fields[i])) continue;
+
+                        if (!int.TryParse(fields[i], out int rankingValue))
+                        {
+                            throw new InvalidDataException($"Invalid role ranking value. Value needs to be a number, but was {fields[i]}.");
+                        }
+
+                        newCard.Roles.Add(new RoleModel(allRoles[i - 2], rankingValue, true));
+                    }
+
+                    cards.Add(newCard);
                 }
 
                 result.AddCards(cards);

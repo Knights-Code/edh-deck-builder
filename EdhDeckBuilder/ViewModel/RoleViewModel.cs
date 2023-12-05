@@ -23,16 +23,25 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _applies, value); }
         }
 
+        private int _value;
+        public int Value
+        {
+            get { return _value; }
+            set { SetProperty(ref _value, value); }
+        }
+
         public RoleViewModel(RoleModel model)
         {
             _name = model.Name;
             _applies = model.Applies;
+            _value = model.Value;
         }
 
         public RoleViewModel(string name)
         {
             _name = name;
             _applies = false;
+            _value = 1;
         }
 
         public void ApplySilently()
@@ -42,7 +51,7 @@ namespace EdhDeckBuilder.ViewModel
 
         public RoleModel ToModel()
         {
-            return new RoleModel(_name, 1, Applies);
+            return new RoleModel(_name, Value, Applies);
         }
     }
 }
