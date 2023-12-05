@@ -306,7 +306,6 @@ namespace EdhDeckBuilder.ViewModel
         public void OpenDeck()
         {
             // TODO: Check for unsaved changes.
-            Reset();
 
             // Prompt for csv file.
             var openDialog = new CommonOpenFileDialog
@@ -317,6 +316,8 @@ namespace EdhDeckBuilder.ViewModel
 
             if (openDialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
+                Reset();
+
                 LoadDeck(openDialog.FileName);
 
                 // Update deck file path for saving.
