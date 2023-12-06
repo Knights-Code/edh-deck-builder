@@ -53,5 +53,10 @@ namespace EdhDeckBuilder.ViewModel
         {
             return new RoleModel(_name, Value, Applies);
         }
+
+        public void UpdateValueSilently(int value)
+        {
+            _value = value;
+        }
     }
 }

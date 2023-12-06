@@ -108,7 +108,7 @@ namespace EdhDeckBuilder.ViewModel
                 {
                     var rankingForRole = roleRankings.FirstOrDefault(rr => rr.Name == roleVm.Name);
 
-                    if (rankingForRole != null) roleVm.Value = rankingForRole.Value;
+                    if (rankingForRole != null) roleVm.UpdateValueSilently(rankingForRole.Value);
                 }
 
                 if (!roleModel.Applies) continue;
