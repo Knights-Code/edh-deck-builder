@@ -24,6 +24,7 @@
                 <MenuItem Header="Import from Clipboard" Command="{Binding ImportFromClipboardCommand}" />
                 <MenuItem Header="Export to Clipboard" Command="{Binding ExportToClipboardCommand}" />
                 <MenuItem Header="Sort" Command="{Binding SortCardsCommand}" />
+                <MenuItem Header="Sort by Role" Command="{Binding SortByRoleCommand}" />
                 <MenuItem Header="Clean Up" Command="{Binding CleanUpCommand}" />
                 <MenuItem Header="Decklist Diff" Command="{Binding DecklistDiffCommand}" />
                 <MenuItem Header="Role Rankings" Command="{Binding RoleRankingsCommand}" />

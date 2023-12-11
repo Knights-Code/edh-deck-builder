@@ -534,6 +534,23 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        public bool CanSortByRole()
+        {
+            return GetHighlightedRole() != null;
+        }
+
+        public void SortByRole()
+        {
+            // Only sort if exactly 1 role is highlighted.
+            if (!CanSortByRole()) return;
+
+            // Put all cards with role at top of list, then order them by
+            // role ranking in ascending order. Put all other cards after.
+            var list = new List<CardViewModel>(CardVms);
+
+            CardVms = new ObservableCollection<CardViewModel>(list.OrderBy(card => card.RoleVms.FirstOrDefault(role => role.Name == GetHighlightedRole() && role.Applies)?.Value ?? 100));
+        }
+
         public DeckModel ToModel()
         {
             var deckName = string.IsNullOrEmpty(_name) ? _defaultDeckName : _name;

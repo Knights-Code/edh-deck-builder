@@ -89,6 +89,7 @@ namespace TestHarness
         public ICommand NewCardEnterCommand { get; set; }
 
         public ICommand SortCardsCommand { get; set; }
+        public ICommand SortByRoleCommand { get; set; }
 
         public ICommand CleanUpCommand { get; set; }
 
@@ -98,6 +99,7 @@ namespace TestHarness
 
         public TestHarnessViewModel()
         {
+            DeckBuilderVm = new DeckBuilderViewModel();
             NewCardEnterCommand = new DelegateCommand(AddNewCard, () => !string.IsNullOrEmpty(NewCardName));
 
             // Menu Commands //
@@ -109,11 +111,11 @@ namespace TestHarness
             ExportToClipboardCommand = new DelegateCommand(ExportToClipboard);
             CustomRoleCommand = new DelegateCommand(AddCustomRole);
             SortCardsCommand = new DelegateCommand(SortCards, () => DeckBuilderVm.CardVms.Any());
+            SortByRoleCommand = new DelegateCommand(SortCardsByRoleRanking);
             CleanUpCommand = new DelegateCommand(CleanUp, () => DeckBuilderVm.CardVms.Any());
             DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
             RoleRankingsCommand = new DelegateCommand(RoleRankings);
 
-            DeckBuilderVm = new DeckBuilderViewModel();
 
             if (!string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
             {
@@ -164,6 +166,11 @@ namespace TestHarness
         public void SortCards()
         {
             DeckBuilderVm.SortCards();
+        }
+
+        public void SortCardsByRoleRanking()
+        {
+            DeckBuilderVm.SortByRole();
         }
 
         public void CleanUp()
