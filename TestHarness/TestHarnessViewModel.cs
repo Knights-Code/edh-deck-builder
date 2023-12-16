@@ -4,6 +4,7 @@ using Microsoft.Practices.Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,6 +69,14 @@ namespace TestHarness
             }
         }
 
+        public string WindowTitle
+        {
+            get {
+                var fileName = Path.GetFileName(SettingsProvider.DeckFilePath());
+                return $"Test Harness - {Path.GetFileName(SettingsProvider.DeckFilePath())}"; 
+            }
+        }
+
         public SolidColorBrush TextBoxBackground
         {
             get
@@ -116,7 +125,6 @@ namespace TestHarness
             DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
             RoleRankingsCommand = new DelegateCommand(RoleRankings);
 
-
             if (!string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
             {
                 DeckBuilderVm.LoadDeck(SettingsProvider.DeckFilePath());
@@ -131,11 +139,13 @@ namespace TestHarness
         public void SaveDeck()
         {
             DeckBuilderVm.SaveDeck();
+            RaisePropertyChanged(nameof(WindowTitle));
         }
 
         public void OpenDeck()
         {
             DeckBuilderVm.OpenDeck();
+            RaisePropertyChanged(nameof(WindowTitle));
         }
 
         public void AddNewCard()
@@ -146,6 +156,7 @@ namespace TestHarness
         public void SaveDeckAs()
         {
             DeckBuilderVm.SaveDeckAs();
+            RaisePropertyChanged(nameof(WindowTitle));
         }
 
         public void ImportFromClipboard()
