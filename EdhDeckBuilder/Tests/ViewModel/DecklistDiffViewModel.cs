@@ -110,9 +110,9 @@ namespace EdhDeckBuilder.Tests.ViewModel
             cardsToAdd.AddRange(_deckBuilderDeck.Cards.Select(c => $"+{c.NumCopies} {c.Name}"));
 
             // Update UI.
-            CardsToAdd = new ObservableCollection<string>(cardsToAdd);
+            CardsToAdd = new ObservableCollection<string>(cardsToAdd.OrderBy(addedCardName => addedCardName));
             AddsHeader = $"Adds ({cardsToAdd.Count} new cards)";
-            CardsToCut = new ObservableCollection<string>(cardsToCut);
+            CardsToCut = new ObservableCollection<string>(cardsToCut.OrderBy(cutCardName => cutCardName));
             CutsHeader = $"Cuts ({cardsToCut.Count} cards no longer in deck)";
         }
     }
