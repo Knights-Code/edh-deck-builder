@@ -27,6 +27,7 @@
                 <MenuItem Header="Sort by Role" Command="{Binding SortByRoleCommand}" />
                 <MenuItem Header="Clean Up" Command="{Binding CleanUpCommand}" />
                 <MenuItem Header="Decklist Diff" Command="{Binding DecklistDiffCommand}" />
+                <MenuItem Header="Decklist Diff from File" Command="{Binding DecklistDiffFromFileCommand}" />
                 <MenuItem Header="Role Rankings" Command="{Binding RoleRankingsCommand}" />
             </MenuItem>
             <MenuItem Header="_Roles">

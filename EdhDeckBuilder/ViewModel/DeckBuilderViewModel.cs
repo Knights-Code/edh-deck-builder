@@ -488,6 +488,38 @@ namespace EdhDeckBuilder.ViewModel
             decklistDiffWindow.Show();
         }
 
+        public void DecklistDiffFromFile()
+        {
+            // Get and load deck from file.
+            var openDialog = new CommonOpenFileDialog
+            {
+                Title = "Open",
+            };
+            openDialog.Filters.Add(new CommonFileDialogFilter("Comma Separated Values", "*.csv"));
+
+            if (openDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                try
+                {
+                    var diffDeck = _deckProvider.LoadDeck(openDialog.FileName);
+
+                    // Create decklist diff vm and set diff deck to deck string from file.
+                    var decklistDiffWindow = new DecklistDiffWindow();
+                    var decklistDiffVm = new DecklistDiffViewModel($"Decklist Diff for {Name}", ToModel());
+
+                    decklistDiffWindow.DataContext = decklistDiffVm;
+                    decklistDiffVm.DiffDeck = UtilityFunctions.CardsToClipboardFormat(diffDeck.Cards);
+                    decklistDiffVm.Diff();
+                    decklistDiffWindow.Show();
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Couldn't load deck for diff. {e.Message}");
+                }
+            }
+
+        }
+
         private string GetHighlightedRole()
         {
             if (TemplateVms.Count(vm => vm.Highlighted) != 1) return null;

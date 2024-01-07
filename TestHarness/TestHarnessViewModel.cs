@@ -71,8 +71,8 @@ namespace TestHarness
 
         public string WindowTitle
         {
-            get {
-                var fileName = Path.GetFileName(SettingsProvider.DeckFilePath());
+            get
+            {
                 return $"Test Harness - {Path.GetFileName(SettingsProvider.DeckFilePath())}"; 
             }
         }
@@ -104,6 +104,8 @@ namespace TestHarness
 
         public ICommand DecklistDiffCommand { get; set; }
 
+        public ICommand DecklistDiffFromFileCommand { get; set; }
+
         public ICommand RoleRankingsCommand { get; set; }
 
         public TestHarnessViewModel()
@@ -123,6 +125,7 @@ namespace TestHarness
             SortByRoleCommand = new DelegateCommand(SortCardsByRoleRanking);
             CleanUpCommand = new DelegateCommand(CleanUp, () => DeckBuilderVm.CardVms.Any());
             DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
+            DecklistDiffFromFileCommand = new DelegateCommand(DecklistDiffFromFile);
             RoleRankingsCommand = new DelegateCommand(RoleRankings);
 
             if (!string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
@@ -192,6 +195,11 @@ namespace TestHarness
         public void DecklistDiff()
         {
             DeckBuilderVm.DecklistDiff();
+        }
+
+        public void DecklistDiffFromFile()
+        {
+            DeckBuilderVm.DecklistDiffFromFile();
         }
 
         public void RoleRankings()
