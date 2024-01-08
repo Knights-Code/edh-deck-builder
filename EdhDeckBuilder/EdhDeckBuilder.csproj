@@ -97,6 +97,7 @@
     <Compile Include="Tests\ViewModel\CardViewModelTests.cs" />
     <Compile Include="Tests\ViewModel\DeckBuilderViewModelTests.cs" />
     <Compile Include="Tests\ViewModel\DecklistDiffViewModel.cs" />
+    <Compile Include="Tests\ViewModel\DecklistDiffViewModelTests.cs" />
     <Compile Include="ViewModel\DeckBuilderViewModel.cs" />
     <Compile Include="ViewModel\RoleRankingsViewModel.cs" />
     <Compile Include="ViewModel\RoleViewModel.cs" />

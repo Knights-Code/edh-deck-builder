@@ -73,6 +73,8 @@ namespace EdhDeckBuilder.Tests.ViewModel
             var diffDeckCards = new Stack<CardModel>(UtilityFunctions.ParseCardsFromText(DiffDeck));
             var cardsToAdd = new List<string>();
             var cardsToCut = new List<string>();
+            var hardCutCount = 0;
+            var brandNewCount = 0;
 
             // Firstly, go through all the cards in the diff deck list, and determine if any cuts
             // need to be made.
@@ -84,6 +86,7 @@ namespace EdhDeckBuilder.Tests.ViewModel
                 {
                     // Card should be cut entirely.
                     cardsToCut.Add($"-{card.NumCopies} {card.Name}");
+                    hardCutCount++;
                     continue;
                 }
 
@@ -107,13 +110,14 @@ namespace EdhDeckBuilder.Tests.ViewModel
             }
 
             // At this point, the only cards left to process in the new deck are cards to add.
+            brandNewCount = _deckBuilderDeck.Cards.Count();
             cardsToAdd.AddRange(_deckBuilderDeck.Cards.Select(c => $"+{c.NumCopies} {c.Name}"));
 
             // Update UI.
             CardsToAdd = new ObservableCollection<string>(cardsToAdd.OrderBy(addedCardName => addedCardName));
-            AddsHeader = $"Adds ({cardsToAdd.Count} new cards)";
+            AddsHeader = $"{cardsToAdd.Count} Add(s) ({brandNewCount} card(s) entirely new to deck)";
             CardsToCut = new ObservableCollection<string>(cardsToCut.OrderBy(cutCardName => cutCardName));
-            CutsHeader = $"Cuts ({cardsToCut.Count} cards no longer in deck)";
+            CutsHeader = $"{cardsToCut.Count} Cut(s) ({hardCutCount} card(s) removed entirely from deck)";
         }
     }
 }
