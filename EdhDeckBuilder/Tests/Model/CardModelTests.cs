@@ -70,5 +70,35 @@ namespace EdhDeckBuilder.Tests.Model
 
             Assert.AreEqual("https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=130550&type=card", url);
         }
+
+        [Test]
+        public void BuildScryfallTaggerUrl_WhenSetCodeIsNull_ReturnsEmptyString()
+        {
+            var cardModel = new CardModel { Name = "Junk Jet", CollectorNumber = "60" };
+
+            var url = cardModel.BuildScryfallTaggerUrl();
+
+            Assert.AreEqual(string.Empty, url);
+        }
+
+        [Test]
+        public void BuildScryfallTaggerUrl_WhenCollectorNumberIsNull_ReturnsEmptyString()
+        {
+            var cardModel = new CardModel { Name = "Junk Jet", SetCode = "PIP" };
+
+            var url = cardModel.BuildScryfallTaggerUrl();
+
+            Assert.AreEqual(string.Empty, url);
+        }
+
+        [Test]
+        public void BuildScryfallTaggerUrl_WhenCardHasSetCodeAndCollectorNumber_ReturnsCorrectUrl()
+        {
+            var cardModel = new CardModel { Name = "Junk Jet", SetCode = "PIP", CollectorNumber = "60" };
+
+            var url = cardModel.BuildScryfallTaggerUrl();
+
+            Assert.AreEqual("https://tagger.scryfall.com/card/PIP/60", url);
+        }
     }
 }

@@ -43,6 +43,13 @@ namespace EdhDeckBuilder.Model
             return $"https://cards.scryfall.io/large/{(back ? "back" : "front")}/{firstChar}/{secondChar}/{ScryfallId}.jpg";
         }
 
+        public string BuildScryfallTaggerUrl()
+        {
+            if (string.IsNullOrEmpty(SetCode) || string.IsNullOrEmpty(CollectorNumber)) return string.Empty;
+
+            return $"https://tagger.scryfall.com/card/{SetCode}/{CollectorNumber}";
+        }
+
         public string ClipboardFormat()
         {
             return $"{NumCopies} {Name}";

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHarness", "..\TestHarne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppeteerSandbox", "..\PuppeteerSandbox\PuppeteerSandbox.csproj", "{544E6EE5-6619-444A-B52A-D93215EE5841}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scryscraper", "..\Scryscraper\Scryscraper.csproj", "{B5C22310-2790-4947-B4E2-69ED4BC68034}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{544E6EE5-6619-444A-B52A-D93215EE5841}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{544E6EE5-6619-444A-B52A-D93215EE5841}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{544E6EE5-6619-444A-B52A-D93215EE5841}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5C22310-2790-4947-B4E2-69ED4BC68034}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5C22310-2790-4947-B4E2-69ED4BC68034}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5C22310-2790-4947-B4E2-69ED4BC68034}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5C22310-2790-4947-B4E2-69ED4BC68034}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
