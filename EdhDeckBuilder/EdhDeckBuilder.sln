@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EdhDeckBuilder", "EdhDeckBu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHarness", "..\TestHarness\TestHarness.csproj", "{4295CFD1-A5C6-49EB-B82E-B3902292FBC2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppeteerSandbox", "..\PuppeteerSandbox\PuppeteerSandbox.csproj", "{544E6EE5-6619-444A-B52A-D93215EE5841}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{4295CFD1-A5C6-49EB-B82E-B3902292FBC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4295CFD1-A5C6-49EB-B82E-B3902292FBC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4295CFD1-A5C6-49EB-B82E-B3902292FBC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{544E6EE5-6619-444A-B52A-D93215EE5841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{544E6EE5-6619-444A-B52A-D93215EE5841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{544E6EE5-6619-444A-B52A-D93215EE5841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{544E6EE5-6619-444A-B52A-D93215EE5841}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
