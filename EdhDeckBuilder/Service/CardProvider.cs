@@ -24,6 +24,35 @@ namespace EdhDeckBuilder.Service
             _cards = new Dictionary<string, CardModel>();
         }
 
+        private Dictionary<string, int> IdentifyColumnNumbers(IList<string> columnHeaderNames, string[] columnHeaders)
+        {
+            if (!columnHeaderNames.Any())
+            {
+                throw new ArgumentException("Need at least one column header name to retrieve column number(s).", nameof(columnHeaderNames));
+            }
+
+            if (!columnHeaders.Any())
+            {
+                throw new ArgumentException("No column headers were provided.", nameof(columnHeaders));
+            }
+
+            var result = new Dictionary<string, int>();
+
+            for (var i = 0; i < columnHeaders.Length; i++)
+            {
+                foreach (var columnHeaderName in columnHeaderNames)
+                {
+                    if (columnHeaders[i] == columnHeaderName)
+                    {
+                        result[columnHeaderName] = i;
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
         public void Initialise()
         {
             // Download generic card back.
@@ -38,16 +67,27 @@ namespace EdhDeckBuilder.Service
             {
                 csvParser.SetDelimiters(new string[] { "," });
 
-                // Skip column headers.
-                csvParser.ReadLine();
+                // Identify key columns and their number.
+                var columnHeaderNumbersByColumnName = IdentifyColumnNumbers(new List<string> { 
+                    "multiverseId",
+                    "scryfallId", 
+                    "uuid" }, csvParser.ReadFields());
+
+                if (columnHeaderNumbersByColumnName.Keys.Count < 3)
+                {
+                    // Couldn't locate all columns.
+                    throw new InvalidDataException("Card identifiers CSV is missing one or more key columns. Key columns are multiverseId," +
+                        " scryfallId, and uuid. Please exit the application, check your data files, and try again.\n\n" +
+                        $"File path: {cardIdentifiersPath}");
+                }
 
                 while (!csvParser.EndOfData)
                 {
                     var fields = csvParser.ReadFields();
-                    var multiverseId = fields[12];
-                    var scryfallId = fields[13];
+                    var multiverseId = fields[columnHeaderNumbersByColumnName["multiverseId"]];
+                    var scryfallId = fields[columnHeaderNumbersByColumnName["scryfallId"]];
 
-                    var uuid = fields[18];
+                    var uuid = fields[columnHeaderNumbersByColumnName["uuid"]];
 
                     if (string.IsNullOrEmpty(uuid)) continue; // Ignore cards without a UUID (don't think this is possible).
 
@@ -63,15 +103,24 @@ namespace EdhDeckBuilder.Service
                 csvParser.SetDelimiters(new string[] { "," });
                 csvParser.HasFieldsEnclosedInQuotes = true;
 
-                // Skip column headers.
-                csvParser.ReadLine();
+                // Identify key columns and their number.
+                var columnHeaderNumbersByColumnName = IdentifyColumnNumbers(new List<string> {
+                    "uuid",
+                    "name" }, csvParser.ReadFields());
+
+                if (columnHeaderNumbersByColumnName.Keys.Count < 2)
+                {
+                    // Couldn't locate all columns.
+                    throw new InvalidDataException("Cards CSV is missing one or more key columns. Key columns are multiverseId," +
+                        " scryfallId, and uuid. Please exit the application, check your data files, and try again.\n\n" +
+                        $"File path: {cardIdentifiersPath}");
+                }
 
                 while (!csvParser.EndOfData)
                 {
                     var fields = csvParser.ReadFields();
-                    var uuid = fields[75];
-
-                    var name = fields[50];
+                    var uuid = fields[columnHeaderNumbersByColumnName["uuid"]];
+                    var name = fields[columnHeaderNumbersByColumnName["name"]];
 
                     if (string.IsNullOrEmpty(name)) continue; // Ignore cards with no name.
 
