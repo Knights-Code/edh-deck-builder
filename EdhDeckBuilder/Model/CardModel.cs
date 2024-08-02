@@ -23,6 +23,7 @@ namespace EdhDeckBuilder.Model
 
         public CardModel()
         {
+            AllTypes = new List<string>();
             Roles = new List<RoleModel>();
         }
 
