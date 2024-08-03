@@ -103,6 +103,7 @@
     <Compile Include="ViewModel\DeckBuilderViewModel.cs" />
     <Compile Include="ViewModel\RoleRankingsViewModel.cs" />
     <Compile Include="ViewModel\RoleViewModel.cs" />
+    <Compile Include="ViewModel\TagManagerViewModel.cs" />
     <Compile Include="ViewModel\TemplateViewModel.cs" />
     <Compile Include="Model\CardModel.cs" />
     <Compile Include="Service\CardProvider.cs" />
@@ -129,6 +130,9 @@
     </Compile>
     <Compile Include="View\RoleView.xaml.cs">
       <DependentUpon>RoleView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\TagManagerView.xaml.cs">
+      <DependentUpon>TagManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\TemplateView.xaml.cs">
       <DependentUpon>TemplateView.xaml</DependentUpon>
@@ -169,6 +173,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="View\TagManagerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\TemplateView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -201,7 +209,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Scryscraper\Scryscraper.csproj">
+      <Project>{b5c22310-2790-4947-b4e2-69ed4bc68034}</Project>
+      <Name>Scryscraper</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

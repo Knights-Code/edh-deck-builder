@@ -101,6 +101,8 @@ namespace TestHarness
 
         public ICommand CleanUpCommand { get; set; }
 
+        public ICommand ManageTagsCommand { get; set; }
+
         public ICommand DecklistDiffCommand { get; set; }
 
         public ICommand DecklistDiffFromFileCommand { get; set; }
@@ -123,7 +125,8 @@ namespace TestHarness
             SortCardsCommand = new DelegateCommand(SortCards, () => DeckBuilderVm.CardVms.Any());
             SortByRoleCommand = new DelegateCommand(SortCardsByRoleRanking);
             CleanUpCommand = new DelegateCommand(CleanUp, () => DeckBuilderVm.CardVms.Any());
-            DecklistDiffCommand = new DelegateCommand(DecklistDiff);
+            ManageTagsCommand = new DelegateCommand(ManageTags, () => DeckBuilderVm.CardVms.Any());
+            DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
             DecklistDiffFromFileCommand = new DelegateCommand(DecklistDiffFromFile);
             RoleRankingsCommand = new DelegateCommand(RoleRankings);
 
@@ -196,6 +199,11 @@ namespace TestHarness
         public void CleanUp()
         {
             DeckBuilderVm.CleanUp();
+        }
+
+        public void ManageTags()
+        {
+            DeckBuilderVm.ManageTags();
         }
 
         public void DecklistDiff()

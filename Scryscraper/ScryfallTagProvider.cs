@@ -9,25 +9,32 @@ namespace Scryscraper
 {
     public class ScryfallTagProvider
     {
-        private IScryfallService _scryfallService;
-
         private async Task<List<string>> RetrieveTagsFromUrlAsync(
             string url,
             IPage page,
-            NavigationOptions navigationOptions)
+            NavigationOptions navigationOptions,
+            string cardName = "")
         {
             var result = new List<string>();
 
             try
             {
                 await page.GoToAsync(url, navigationOptions);
-                
+
+                var notFoundSelector = "//h1[text() ='Lost in the wild']";
                 var cardTagSelector = "//h2[text() = ' Card']/..//div[@class='tag-row']//div" +
                     "[contains(concat(\" \", normalize-space(@class), \" \"), \" value-card \")]/..//a";
                 var ancestorTagSelector = "//h2[text() = ' Card']/..//div[@class='tagging-ancestors']//a";
+                var notFoundTags = await page.XPathAsync(notFoundSelector);
+
+                if (notFoundTags.Count() > 0)
+                {
+                    result.Add("Scryfall Tagger website reported URL not found.");
+                    return result;
+                }
+
                 var cardTags = await page.XPathAsync(cardTagSelector);
                 var ancestorTags = await page.XPathAsync(ancestorTagSelector);
-
 
                 foreach (var cardTag in cardTags)
                 {
@@ -41,9 +48,17 @@ namespace Scryscraper
                     result.Add(innerText);
                 }
             }
-            catch (Exception e)
+            catch
             {
-                throw e;
+                if (string.IsNullOrEmpty(cardName))
+                {
+                    result.Add($"Unable to retrieve tags. Card name was null or blank." +
+                        $"URL was {(!string.IsNullOrEmpty(url) ? url : "null")}.");
+                }
+                else
+                {
+                    result.Add($"Unable to retrieve tags for {cardName}. URL was {(!string.IsNullOrEmpty(url) ? url : "null")}.");
+                }
             }
 
             return result;
@@ -73,7 +88,11 @@ namespace Scryscraper
 
                 foreach (var cardName in cards.Keys)
                 {
-                    var tagsForCard = await RetrieveTagsFromUrlAsync(cards[cardName], page, navigationOptions);
+                    var tagsForCard = await RetrieveTagsFromUrlAsync(
+                        cards[cardName],
+                        page,
+                        navigationOptions,
+                        cardName);
                     result[cardName] = tagsForCard;
                 }
             }
