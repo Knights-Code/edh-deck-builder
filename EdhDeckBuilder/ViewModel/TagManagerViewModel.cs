@@ -1,11 +1,11 @@
 ﻿using EdhDeckBuilder.Model;
 using EdhDeckBuilder.Service;
 using Microsoft.Practices.Prism.Commands;
-using Scryscraper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -45,16 +45,14 @@ namespace EdhDeckBuilder.ViewModel
 
         private readonly DeckModel _deck;
         private readonly CardProvider _cardProvider;
-        private readonly ScryfallTagProvider _scryfallTagProvider;
 
-        public TagManagerViewModel(string title, DeckModel deck, CardProvider cardProvider, ScryfallTagProvider scryfallTagProvider)
+        public TagManagerViewModel(string title, DeckModel deck, CardProvider cardProvider)
         {
             Title = title;
             Status = "Idle";
             CanRetrieve = true;
             _deck = deck;
             _cardProvider = cardProvider;
-            _scryfallTagProvider = scryfallTagProvider;
             RetrieveCommand = new DelegateCommand(async () => await Retrieve());
         }
 
@@ -68,35 +66,15 @@ namespace EdhDeckBuilder.ViewModel
                 return;
             }
 
-            Status = "Deck valid. Building input dictionary...";
-            var inputDictionary = await BuildInputDictionaryAsync();
-            Status = "Input dictionary complete. Retrieving tags from Scryfall Tagger...";
-            var tagsDictionary = await _scryfallTagProvider.GetScryfallTagsAsync(inputDictionary);
+            Status = "Deck valid. Retrieving tags...";
+            var tagsDictionary = await _cardProvider.GetScryfallTagsForCardsAsync(
+                _deck.Cards.Select((c) => c.Name).ToList(),
+                new CancellationTokenSource());
             Status = "Tags retrieved. Compiling summary...";
             TagsSummary = await Task.Run(() => CompileTagsSummary(tagsDictionary));
             Status = "Retrieval complete!";
 
             CanRetrieve = true;
-        }
-
-        private async Task<Dictionary<string, string>> BuildInputDictionaryAsync()
-        {
-            var result = new Dictionary<string, string>();
-
-            foreach (var card in _deck.Cards)
-            {
-                var hydratedCard = await _cardProvider.TryGetCard(card.Name);
-
-                if (hydratedCard == null)
-                {
-                    result[card.Name] = $"Failed to hydrate card: {card.Name}";
-                    continue;
-                }
-
-                result[card.Name] = hydratedCard.BuildScryfallTaggerUrl();
-            }
-
-            return result;
         }
 
         private string CompileTagsSummary(Dictionary<string, List<string>> tagsDictionary)

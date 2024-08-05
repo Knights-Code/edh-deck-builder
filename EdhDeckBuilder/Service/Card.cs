@@ -21,6 +21,7 @@ namespace EdhDeckBuilder.Service
         public Image BackImage { get; set; } = null;
         public int NumCopies { get; set; }
         public List<Role> Roles { get; set; } = new List<Role>();
+        public List<string> ScryfallTags { get; set; } = new List<string>();
         public bool HasDownloadableImage => !string.IsNullOrEmpty(ScryfallId) || !string.IsNullOrEmpty(MultiverseId);
 
         public Card()
@@ -73,6 +74,13 @@ namespace EdhDeckBuilder.Service
             var firstChar = ScryfallId[0];
             var secondChar = ScryfallId[1];
             return $"https://cards.scryfall.io/large/{(back ? "back" : "front")}/{firstChar}/{secondChar}/{ScryfallId}.jpg";
+        }
+
+        public string BuildScryfallTaggerUrl()
+        {
+            if (string.IsNullOrEmpty(SetCode) || string.IsNullOrEmpty(CollectorNumber)) return string.Empty;
+
+            return $"https://tagger.scryfall.com/card/{SetCode}/{CollectorNumber}";
         }
     }
 }

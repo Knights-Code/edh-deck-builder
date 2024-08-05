@@ -10,6 +10,7 @@ using EdhDeckBuilder.Model;
 using System.Net;
 using System.Threading;
 using System.Net.Http;
+using Scryscraper;
 
 namespace EdhDeckBuilder.Service
 {
@@ -18,6 +19,7 @@ namespace EdhDeckBuilder.Service
     /// </summary>
     public class CardProvider
     {
+        private readonly ScryfallTagProvider _scryfallTagProvider;
         private bool _initialised = false;
         private readonly Dictionary<string, Card> _cards;
         private Image _cardBack = null;
@@ -28,6 +30,7 @@ namespace EdhDeckBuilder.Service
 
         public CardProvider()
         {
+            _scryfallTagProvider = new ScryfallTagProvider();
             _cards = new Dictionary<string, Card>();
             _cardIdentifierColumnNumbers = new Dictionary<string, int>();
             _cardDataColumnNumbers = new Dictionary<string, int>();
@@ -138,32 +141,6 @@ namespace EdhDeckBuilder.Service
         {
             var result = list.Split(',').Select((item) => item.Trim()).ToList();
             return result;
-        }
-
-        public async Task<CardModel> TryGetCard(string name,
-            CancellationTokenSource cancellationTokenSource = null)
-        {
-            if (string.IsNullOrEmpty(name)) return null;
-
-            if (!_initialised) await Initialise();
-
-            var lowerCaseName = name.ToLower();
-
-            if (!_cards.ContainsKey(lowerCaseName))
-            {
-                // Attempt to locate card data in files.
-                if (cancellationTokenSource == null)
-                {
-                    cancellationTokenSource = new CancellationTokenSource();
-                }
-
-                await TryGetCardModelAsync(lowerCaseName, cancellationTokenSource);
-            }
-
-            lock (_cards)
-            {
-                return _cards[lowerCaseName].ToModel();
-            }
         }
 
         public async Task<List<CardModel>> TryGetCardModelsAsync(List<string> names,
@@ -399,6 +376,72 @@ namespace EdhDeckBuilder.Service
             }
 
             return cardResults;
+        }
+
+        public async Task<List<string>> GetScryfallTagsForCardAsync(string cardName,
+            CancellationTokenSource cts)
+        {
+            var resultDictionary = await GetScryfallTagsForCardsAsync(new List<string> { cardName },
+                cts);
+
+            if (!resultDictionary.ContainsKey(cardName)) return new List<string>();
+
+            return resultDictionary[cardName];
+        }
+
+        public async Task<Dictionary<string, List<string>>> GetScryfallTagsForCardsAsync(List<string> manifest,
+            CancellationTokenSource cts)
+        {
+            var result = new Dictionary<string, List<string>>();
+            var input = new Dictionary<string, string>();
+
+            // Determine which cards are invalid and which cards already have tags.
+            foreach (var cardName in manifest)
+            {
+                var card = await TryGetCardAsync(cardName, cts);
+
+                if (card == null)
+                {
+                    // TODO: Report failure somehow.
+                    continue;
+                }
+
+                if (card.ScryfallTags.Any())
+                {
+                    // Tags were loaded already. Add to result and skip
+                    // to next card.
+                    result[cardName] = card.ScryfallTags;
+                    continue;
+                }
+
+                // Card exists, but no tags are loaded. Add to input dictionary
+                // for Scryfall retrieval.
+                input[cardName] = card.BuildScryfallTaggerUrl();
+            }
+
+            // Fetch remaining tags from Scryfall, if necessary.
+            if (input.Keys.Any())
+            {
+                var tagsFromScryfall = await _scryfallTagProvider.GetScryfallTagsAsync(input);
+
+                // Update tags for each card.
+                await Task.Run(() =>
+                {
+                    foreach (var cardName in tagsFromScryfall.Keys)
+                    {
+                        // If we got this far, it means the card already exists
+                        // in the cards dictionary, so we don't need to TryGet
+                        // here.
+                        lock (_cards)
+                        {
+                            _cards[cardName.ToLower()].ScryfallTags = tagsFromScryfall[cardName];
+                            result[cardName] = tagsFromScryfall[cardName];
+                        }
+                    }
+                });
+            }
+
+            return result;
         }
 
         public Image GetCardBack()

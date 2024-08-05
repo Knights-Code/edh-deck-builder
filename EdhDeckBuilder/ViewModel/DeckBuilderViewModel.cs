@@ -4,7 +4,6 @@ using EdhDeckBuilder.Service.Clipboard;
 using EdhDeckBuilder.Tests.ViewModel;
 using EdhDeckBuilder.View;
 using Microsoft.WindowsAPICodePack.Dialogs;
-using Scryscraper;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,7 +21,6 @@ namespace EdhDeckBuilder.ViewModel
         private CardProvider _cardProvider;
         private DeckProvider _deckProvider;
         private RoleProvider _roleProvider;
-        private ScryfallTagProvider _scryfallTagProvider;
         private Dictionary<string, int> _lastNumCopiesForCard = new Dictionary<string, int>();
         private IClipboard _clipboard;
 
@@ -106,7 +104,6 @@ namespace EdhDeckBuilder.ViewModel
             _cardProvider = new CardProvider();
             _deckProvider = new DeckProvider();
             _roleProvider = new RoleProvider();
-            _scryfallTagProvider = new ScryfallTagProvider();
 
             if (clipboard != null) _clipboard = clipboard;
             else _clipboard = new SimpleClipboard();
@@ -549,8 +546,7 @@ namespace EdhDeckBuilder.ViewModel
             var tagManagerVm = new TagManagerViewModel(
                 $"Manage Scryfall Tags for {Name}",
                 ToModel(),
-                _cardProvider,
-                _scryfallTagProvider);
+                _cardProvider);
 
             tagManagerWindow.DataContext = tagManagerVm;
             tagManagerWindow.Show();

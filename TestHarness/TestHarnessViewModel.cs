@@ -125,7 +125,7 @@ namespace TestHarness
             SortCardsCommand = new DelegateCommand(SortCards, () => DeckBuilderVm.CardVms.Any());
             SortByRoleCommand = new DelegateCommand(SortCardsByRoleRanking);
             CleanUpCommand = new DelegateCommand(CleanUp, () => DeckBuilderVm.CardVms.Any());
-            ManageTagsCommand = new DelegateCommand(ManageTags, () => DeckBuilderVm.CardVms.Any());
+            ManageTagsCommand = new DelegateCommand(ManageTags);
             DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
             DecklistDiffFromFileCommand = new DelegateCommand(DecklistDiffFromFile);
             RoleRankingsCommand = new DelegateCommand(RoleRankings);
