@@ -19,7 +19,9 @@
         <Button Grid.Row="0" Command="{Binding RetrieveCommand}" IsEnabled="{Binding CanRetrieve}">
             Retrieve Scryfall tags and counts for deck
         </Button>
-        <TextBlock Grid.Row="1" Text="{Binding TagsSummary}" />
+        <ScrollViewer Grid.Row="1">
+            <TextBlock Grid.Row="1" Text="{Binding TagsSummary}" TextWrapping="Wrap" />
+        </ScrollViewer>
         <Label Grid.Row="2" Content="{Binding Status}" />
     </Grid>
 </Window>
