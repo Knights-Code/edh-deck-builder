@@ -79,6 +79,7 @@ namespace EdhDeckBuilder.ViewModel
                 var previewVm = new CardViewModel(previewCard);
                 MaybeUpdateCardImagesAsync(previewVm);
                 HoveredCardVm = previewVm;
+                HoveredCardVm.RefreshCardImage();
             }
         }
 
@@ -379,7 +380,7 @@ namespace EdhDeckBuilder.ViewModel
             var result = new List<CreateCardStub>();
 
             // Get cards.
-            var cardModels = await _cardProvider.TryGetCardsAsync(manifest.Select((c) => c.Name).ToList(),
+            var cardModels = await _cardProvider.TryGetCardModelsAsync(manifest.Select((c) => c.Name).ToList(),
                 new CancellationTokenSource());
 
             foreach (var cardModel in cardModels)

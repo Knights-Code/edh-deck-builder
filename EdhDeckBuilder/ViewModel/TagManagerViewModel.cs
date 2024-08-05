@@ -69,7 +69,7 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             Status = "Deck valid. Building input dictionary...";
-            var inputDictionary = await Task.Run(() => BuildInputDictionary());
+            var inputDictionary = await BuildInputDictionaryAsync();
             Status = "Input dictionary complete. Retrieving tags from Scryfall Tagger...";
             var tagsDictionary = await _scryfallTagProvider.GetScryfallTagsAsync(inputDictionary);
             Status = "Tags retrieved. Compiling summary...";
@@ -79,13 +79,13 @@ namespace EdhDeckBuilder.ViewModel
             CanRetrieve = true;
         }
 
-        private Dictionary<string, string> BuildInputDictionary()
+        private async Task<Dictionary<string, string>> BuildInputDictionaryAsync()
         {
             var result = new Dictionary<string, string>();
 
             foreach (var card in _deck.Cards)
             {
-                var hydratedCard = _cardProvider.TryGetCard(card.Name);
+                var hydratedCard = await _cardProvider.TryGetCard(card.Name);
 
                 if (hydratedCard == null)
                 {

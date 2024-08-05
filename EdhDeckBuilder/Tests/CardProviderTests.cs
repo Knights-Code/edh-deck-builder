@@ -82,7 +82,7 @@ namespace EdhDeckBuilder.Tests
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var cards = _cardProvider.TryGetCardsAsync(
+            var cards = _cardProvider.TryGetCardModelsAsync(
                 manifest,
                 new CancellationTokenSource());
 

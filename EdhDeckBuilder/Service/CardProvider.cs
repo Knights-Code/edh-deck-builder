@@ -145,7 +145,7 @@ namespace EdhDeckBuilder.Service
         {
             if (string.IsNullOrEmpty(name)) return null;
 
-            if (!_initialised) Initialise();
+            if (!_initialised) await Initialise();
 
             var lowerCaseName = name.ToLower();
 
@@ -166,7 +166,7 @@ namespace EdhDeckBuilder.Service
             }
         }
 
-        public async Task<List<CardModel>> TryGetCardsAsync(List<string> names,
+        public async Task<List<CardModel>> TryGetCardModelsAsync(List<string> names,
             CancellationTokenSource cancellationTokenSource)
         {
             var result = new List<CardModel>();
@@ -247,9 +247,12 @@ namespace EdhDeckBuilder.Service
         {
             if (string.IsNullOrEmpty(name)) return null;
 
-            if (!_initialised) Initialise();
+            if (!_initialised) await Initialise();
 
             var dataCard = await TryGetCardAsync(name, cancellationTokenSource);
+
+            if (dataCard == null) return null;
+
             return dataCard.ToModel();
         }
 
