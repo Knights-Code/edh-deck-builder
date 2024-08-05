@@ -12,6 +12,9 @@ namespace EdhDeckBuilder.Model
         public string Name { get; set; }
         public string MultiverseId { get; set; }
         public string ScryfallId { get; set; }
+        public string CollectorNumber { get; set; }
+        public string SetCode { get; set; }
+        public List<string> AllTypes { get; set; }
         public Image CardImage { get; set; } = null;
         public Image BackImage { get; set; } = null;
         public int NumCopies { get; set; }

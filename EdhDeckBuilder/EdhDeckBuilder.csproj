@@ -80,10 +80,12 @@
     <Compile Include="Model\DeckModel.cs" />
     <Compile Include="Model\RoleModel.cs" />
     <Compile Include="Model\TemplateModel.cs" />
+    <Compile Include="Service\Card.cs" />
     <Compile Include="Service\Clipboard\FakeClipboard.cs" />
     <Compile Include="Service\Clipboard\SimpleClipboard.cs" />
     <Compile Include="Service\Clipboard\IClipboard.cs" />
     <Compile Include="Service\DeckProvider.cs" />
+    <Compile Include="Service\Role.cs" />
     <Compile Include="Service\RoleProvider.cs" />
     <Compile Include="Service\SettingsProvider.cs" />
     <Compile Include="Service\TemplatesAndDefaults.cs" />

@@ -8,7 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace EdhDeckBuilder.ViewModel
@@ -40,19 +43,39 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        public async void MaybeUpdateCardImagesAsync(CardViewModel cardVm)
+        {
+            if (cardVm.ImagesLoaded) return;
+
+            var imageTuple = await _cardProvider.GetCardImagesAsync(cardVm.Name, new CancellationTokenSource());
+            var frontImage = imageTuple.Item1;
+            var backImage = imageTuple.Item2;
+
+            if (frontImage == null || backImage == null)
+            {
+                return;
+            }
+
+            cardVm.FrontImage = frontImage;
+            cardVm.BackImage = backImage;
+            cardVm.ImagesLoaded = true;
+            cardVm.RefreshCardImage();
+        }
+
         public void ClearPreview()
         {
             HoveredCardVm = null;
         }
 
-        public void TryPreview(string previewCardName)
+        public async Task TryPreviewAsync(string previewCardName)
         {
-            var previewCard = _cardProvider.TryGetCard(previewCardName);
+            var previewCard = await _cardProvider.TryGetCardModelAsync(previewCardName,
+                new CancellationTokenSource());
 
             if (previewCard != null)
             {
                 var previewVm = new CardViewModel(previewCard);
-                AddImagesToCard(previewVm);
+                MaybeUpdateCardImagesAsync(previewVm);
                 HoveredCardVm = previewVm;
             }
         }
@@ -122,10 +145,8 @@ namespace EdhDeckBuilder.ViewModel
             return CardVms.Sum(vm => vm.NumCopies);
         }
 
-        public bool AddCard(string cardName, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null)
+        public bool AddCard(CardModel cardModel, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null)
         {
-            var cardModel = _cardProvider.TryGetCard(cardName);
-
             if (cardModel == null) return false;
 
             if (CardVms.Any(vm => vm.Name == cardModel.Name)) return false; // Don't add dupes.
@@ -149,7 +170,9 @@ namespace EdhDeckBuilder.ViewModel
 
             var cardVm = new CardViewModel(cardModel, deckRoles, cardRoleRankings);
 
-            AddImagesToCard(cardVm);
+            var cardBack = _cardProvider.GetCardBack();
+            cardVm.FrontImage = cardBack;
+            cardVm.BackImage = cardBack;
             cardVm.PropertyChanged += CardVm_PropertyChanged;
             cardVm.RoleUpdated += CardVm_RoleUpdated;
             CardVms.Add(cardVm);
@@ -160,17 +183,12 @@ namespace EdhDeckBuilder.ViewModel
             return true;
         }
 
-        private void AddImagesToCard(CardViewModel cardVm)
+        public async Task<bool> AddCardAsync(string cardName, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null)
         {
-            if (cardVm.FrontImage == null)
-            {
-                cardVm.FrontImage = _cardProvider.GetCardImage(cardVm.Name);
-            }
+            var cardModel = await _cardProvider.TryGetCardModelAsync(cardName,
+                new CancellationTokenSource());
 
-            if (cardVm.BackImage == null)
-            {
-                cardVm.BackImage = _cardProvider.GetCardImage(cardVm.Name, true);
-            }
+            return AddCard(cardModel, numCopies, cardRoleRankings, deckRoles);
         }
 
         public void SaveDeckAs()
@@ -219,14 +237,14 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
-        public void ImportFromClipboard()
+        public async Task ImportFromClipboardAsync()
         {
             var cardsToAdd = UtilityFunctions.ParseCardsFromText(_clipboard.GetClipboardText());
             var failures = new List<string>();
 
             foreach (var cardModel in cardsToAdd)
             {
-                if (!AddCard(cardModel.Name, cardModel.NumCopies))
+                if (!await AddCardAsync(cardModel.Name, cardModel.NumCopies))
                 {
                     failures.Add(cardModel.Name);
                 }
@@ -303,7 +321,7 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
-        public void OpenDeck()
+        public async Task OpenDeck()
         {
             // TODO: Check for unsaved changes.
 
@@ -316,36 +334,78 @@ namespace EdhDeckBuilder.ViewModel
 
             if (openDialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                Reset();
-
-                LoadDeck(openDialog.FileName);
-
-                // Update deck file path for saving.
-                SettingsProvider.UpdateDeckFilePath(openDialog.FileName);
+                await LoadDeck(openDialog.FileName);
             }
         }
 
-        public void LoadDeck(string deckPath)
+        /// <summary>
+        /// Loads deck data, then loads card data for each card in the deck,
+        /// updates the UI, and then updates the deck file path in settings.
+        /// </summary>
+        /// <param name="deckPath"></param>
+        public async Task LoadDeck(string deckPath)
         {
-            // TODO: Check for unsaved changes.
-            Reset();
-
             var deckModel = _deckProvider.LoadDeck(deckPath);
+            // TODO: Validate model before attempting to load cards.
+            var manifest = deckModel.Cards.Select((c) => c.Name).ToList();
 
-            // Set name.
-            Name = deckModel.Name;
+            // TODO: Set loading state here.
+            var cardsToAddToUi = await LoadCardsForDeckAsync(deckModel.Cards);
 
-            // Add custom role columns.
-            foreach (var customRole in deckModel.CustomRoles)
+            // Update UI.
+            if (cardsToAddToUi.Any())
             {
-                AddRoleHeader(customRole, 0, 100);
+                Reset();
+                Name = deckModel.Name;
+                foreach (var customRole in deckModel.CustomRoles)
+                {
+                    AddRoleHeader(customRole, 0, 100);
+                }
+
+                foreach (var cardStub in cardsToAddToUi)
+                {
+                    AddCard(cardStub.CardModel, cardStub.NumCopies, cardStub.Roles, deckModel.CustomRoles);
+                }
+
+                SettingsProvider.UpdateDeckFilePath(deckPath);
+            }
+        }
+
+        public async Task<List<CreateCardStub>> LoadCardsForDeckAsync(List<CardModel> manifest)
+        {
+            var result = new List<CreateCardStub>();
+
+            // Get cards.
+            var cardModels = await _cardProvider.TryGetCardsAsync(manifest.Select((c) => c.Name).ToList(),
+                new CancellationTokenSource());
+
+            foreach (var cardModel in cardModels)
+            {
+                var deckModelCard = manifest.First((deckCardModel) => deckCardModel.Name == cardModel.Name);
+                var numCopies = deckModelCard.NumCopies;
+                var roles = deckModelCard.Roles;
+
+                result.Add(new CreateCardStub
+                {
+                    CardModel = cardModel,
+                    NumCopies = numCopies,
+                    Roles = roles,
+                });
             }
 
-            // Add cards.
-            foreach (var cardModel in deckModel.Cards)
-            {
-                AddCard(cardModel.Name, cardModel.NumCopies, cardModel.Roles, deckModel.CustomRoles);
-            }
+            return result;
+        }
+
+        /// <summary>
+        /// Represents a card to add to the card list in the UI.
+        /// As card view models cannot be directly added to the UI from a background thread,
+        /// these stubs have to be returned to the UI thread to be turned into view models.
+        /// </summary>
+        public class CreateCardStub
+        {
+            public CardModel CardModel { get; set; }
+            public int NumCopies { get; set; }
+            public List<RoleModel> Roles { get; set; }
         }
 
         private void AddRoleHeader(string name, int min, int max)

@@ -32,6 +32,8 @@ namespace EdhDeckBuilder.ViewModel
 
         public Image BackImage { get; set; }
 
+        public bool ImagesLoaded { get; set; } = false;
+
         private int _numCopies;
         public int NumCopies
         {

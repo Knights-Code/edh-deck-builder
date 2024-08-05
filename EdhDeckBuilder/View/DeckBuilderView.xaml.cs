@@ -35,6 +35,7 @@ namespace EdhDeckBuilder.View
 
             var vm = DataContext as DeckBuilderViewModel;
             vm.HoveredCardVm = cardVm;
+            vm.MaybeUpdateCardImagesAsync(cardVm);
         }
 
         private void CardView_MouseLeave(object sender, MouseEventArgs e)

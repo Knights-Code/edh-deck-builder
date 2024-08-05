@@ -118,29 +118,29 @@ namespace EdhDeckBuilder.Tests.ViewModel
         }
 
         [Test]
-        public void AddCard_WhenNoCards_AddsCard()
+        public async void AddCard_WhenNoCards_AddsCard()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
-            deckBuilderVm.AddCard("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
 
             Assert.AreEqual(1, deckBuilderVm.CardVms.Count);
         }
 
         [Test]
-        public void AddCard_WhenCardAlreadyAdded_DoesNotAddCard()
+        public async void AddCard_WhenCardAlreadyAdded_DoesNotAddCard()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
-            deckBuilderVm.AddCard("Skullclamp");
-            deckBuilderVm.AddCard("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
 
             Assert.AreEqual(1, deckBuilderVm.CardVms.Count);
         }
 
         [Test]
-        public void DeckBuilderVm_WhenCardRoleUpdated_UpdatesTemplatesCurrentsCorrectly()
+        public async void DeckBuilderVm_WhenCardRoleUpdated_UpdatesTemplatesCurrentsCorrectly()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
-            deckBuilderVm.AddCard("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
             deckBuilderVm.CardVms.First().RoleVms.First(vm => vm.Name == "Draw").Applies = true;
 
             var drawRoleHeader = deckBuilderVm.TemplateVms.First(vm => vm.Role == "Draw");
@@ -149,10 +149,10 @@ namespace EdhDeckBuilder.Tests.ViewModel
         }
 
         [Test]
-        public void DeckBuilderVm_WhenCardCopiesIncreasedWhileRoleApplies_UpdatesTemplatesCurrentsCorrectly()
+        public async void DeckBuilderVm_WhenCardCopiesIncreasedWhileRoleApplies_UpdatesTemplatesCurrentsCorrectly()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
-            deckBuilderVm.AddCard("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
 
             var cardVm = deckBuilderVm.CardVms.First();
             cardVm.RoleVms.First(vm => vm.Name == "Draw").Applies = true;
@@ -164,10 +164,10 @@ namespace EdhDeckBuilder.Tests.ViewModel
         }
 
         [Test]
-        public void DeckBuilderVm_WhenCardCopiesReducedWhileRoleApplies_UpdatesTemplatesCurrentsCorrectly()
+        public async void DeckBuilderVm_WhenCardCopiesReducedWhileRoleApplies_UpdatesTemplatesCurrentsCorrectly()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
-            deckBuilderVm.AddCard("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
 
             var cardVm = deckBuilderVm.CardVms.First();
             cardVm.NumCopies++;
@@ -180,26 +180,26 @@ namespace EdhDeckBuilder.Tests.ViewModel
         }
 
         [Test]
-        public void AddCard__WhenCustomRoleHeadersExist_CreatesRoleVmsForCustomRoles()
+        public async void AddCard__WhenCustomRoleHeadersExist_CreatesRoleVmsForCustomRoles()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
             deckBuilderVm.AddCustomRole();
 
-            deckBuilderVm.AddCard("Skullclamp");
+            await deckBuilderVm.AddCardAsync("Skullclamp");
 
             var skullclamp = deckBuilderVm.CardVms.First();
             Assert.AreEqual(deckBuilderVm.TemplateVms.Count, skullclamp.RoleVms.Count);
         }
 
         [Test]
-        public void ImportFromClipboard_WhenCustomRoleHeadersExist_CreatesRoleVmsForCustomRoles()
+        public async void ImportFromClipboard_WhenCustomRoleHeadersExist_CreatesRoleVmsForCustomRoles()
         {
             var fakeClipboard = new FakeClipboard();
             var deckBuilderVm = new DeckBuilderViewModel(fakeClipboard);
             fakeClipboard.SetClipboardText("1 Bronzebeak Foragers");
             deckBuilderVm.AddCustomRole();
 
-            deckBuilderVm.ImportFromClipboard();
+            await deckBuilderVm.ImportFromClipboardAsync();
 
             var foragers = deckBuilderVm.CardVms.First();
             Assert.AreEqual(deckBuilderVm.TemplateVms.Count, foragers.RoleVms.Count);
