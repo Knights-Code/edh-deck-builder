@@ -126,14 +126,24 @@ namespace EdhDeckBuilder.Service
 
                     for (int i = 2; i < allRoles.Count + 2; i++)
                     {
-                        if (string.IsNullOrEmpty(fields[i])) continue;
-
-                        if (!int.TryParse(fields[i], out int rankingValue))
+                        try
                         {
-                            throw new InvalidDataException($"Invalid role ranking value. Value needs to be a number, but was {fields[i]}.");
-                        }
+                            if (string.IsNullOrEmpty(fields[i])) continue;
 
-                        newCard.Roles.Add(new RoleModel(allRoles[i - 2], rankingValue, true));
+                            if (!int.TryParse(fields[i], out int rankingValue))
+                            {
+                                throw new InvalidDataException($"Invalid role ranking value. Value needs to be a number, but was {fields[i]}.");
+                            }
+
+                            newCard.Roles.Add(new RoleModel(allRoles[i - 2], rankingValue, true));
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            // When a card row has no role data, the CSV parser treats it as having
+                            // fewer columns than the number of roles to examine.
+                            // It's safe to simply treat this as the card not having the role.
+                            continue;
+                        }
                     }
 
                     cards.Add(newCard);

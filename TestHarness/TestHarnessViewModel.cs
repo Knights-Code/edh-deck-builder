@@ -15,8 +15,6 @@ namespace TestHarness
 {
     public class TestHarnessViewModel : ViewModelBase
     {
-        private CardProvider _cardProvider;
-
         private DeckBuilderViewModel _deckBuilderVm;
         public DeckBuilderViewModel DeckBuilderVm
         {
@@ -32,10 +30,10 @@ namespace TestHarness
             set { SetProperty(ref _cards, value); }
         }
 
-        public void TryPreview()
+        public async void TryPreview()
         {
             TextBoxHovered = true;
-            DeckBuilderVm.TryPreview(NewCardName);
+            await DeckBuilderVm.TryPreviewAsync(NewCardName);
         }
 
         public void ClearPreview()
@@ -130,8 +128,13 @@ namespace TestHarness
 
             if (!string.IsNullOrEmpty(SettingsProvider.DeckFilePath()))
             {
-                DeckBuilderVm.LoadDeck(SettingsProvider.DeckFilePath());
+                LoadDeck();
             }
+        }
+
+        public async void LoadDeck()
+        {
+            await DeckBuilderVm.LoadDeck(SettingsProvider.DeckFilePath());
         }
 
         public void NewDeck()
@@ -145,15 +148,16 @@ namespace TestHarness
             RaisePropertyChanged(nameof(WindowTitle));
         }
 
-        public void OpenDeck()
+        public async void OpenDeck()
         {
-            DeckBuilderVm.OpenDeck();
+            await DeckBuilderVm.OpenDeck();
             RaisePropertyChanged(nameof(WindowTitle));
         }
 
         public void AddNewCard()
         {
-            if (DeckBuilderVm.AddCard(NewCardName)) NewCardName = string.Empty;
+            var addSuccessful = Task.Run(() => DeckBuilderVm.AddCardAsync(NewCardName)).Result;
+            if (addSuccessful) NewCardName = string.Empty;
         }
 
         public void SaveDeckAs()
@@ -162,9 +166,9 @@ namespace TestHarness
             RaisePropertyChanged(nameof(WindowTitle));
         }
 
-        public void ImportFromClipboard()
+        public async void ImportFromClipboard()
         {
-            DeckBuilderVm.ImportFromClipboard();
+            await DeckBuilderVm.ImportFromClipboardAsync();
         }
 
         public void ExportToClipboard()
