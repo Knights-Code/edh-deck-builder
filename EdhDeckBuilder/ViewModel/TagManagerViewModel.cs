@@ -123,7 +123,7 @@ namespace EdhDeckBuilder.ViewModel
                     {
                         var newTagSummary = new TagSummary(tag);
                         newTagSummary.AddCard(cardName);
-                        tagSummaries.Enqueue(new TagSummary(tag));
+                        tagSummaries.Enqueue(newTagSummary);
                         continue;
                     }
 
