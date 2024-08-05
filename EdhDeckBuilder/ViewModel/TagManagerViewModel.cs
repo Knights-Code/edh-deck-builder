@@ -67,17 +67,20 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             Status = "Deck valid. Retrieving tags...";
-            var tagsDictionary = await _cardProvider.GetScryfallTagsForCardsAsync(
+            var scryfallTagsResult = await _cardProvider.GetScryfallTagsForCardsAsync(
                 _deck.Cards.Select((c) => c.Name).ToList(),
                 new CancellationTokenSource());
+            var tagsDictionary = scryfallTagsResult.Item1;
+            var errors = scryfallTagsResult.Item2;
             Status = "Tags retrieved. Compiling summary...";
-            TagsSummary = await Task.Run(() => CompileTagsSummary(tagsDictionary));
-            Status = "Retrieval complete!";
+            TagsSummary = await Task.Run(() => CompileTagsSummary(tagsDictionary, errors));
+            Status = $"Retrieval complete! Retrieved tags for {tagsDictionary.Keys.Count} card(s).";
 
             CanRetrieve = true;
         }
 
-        private string CompileTagsSummary(Dictionary<string, List<string>> tagsDictionary)
+        private string CompileTagsSummary(Dictionary<string, List<string>> tagsDictionary,
+            List<string> errors)
         {
             var result = "";
 
@@ -111,7 +114,15 @@ namespace EdhDeckBuilder.ViewModel
                 }
             }
 
-            // Print staple counts first.
+            // Frontload errors.
+            if (errors.Any())
+            {
+                result += "Errors:\n";
+                result += $"{string.Join("\n", errors)}";
+                result += "\n\n";
+            }
+
+            // Print staple counts second.
             for (var i=0; i < 5; i++)
             {
                 result += tagSummaries.Dequeue().ToString() + "\n";

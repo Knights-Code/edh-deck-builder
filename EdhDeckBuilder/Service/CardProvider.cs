@@ -30,7 +30,7 @@ namespace EdhDeckBuilder.Service
 
         public CardProvider()
         {
-            _scryfallTagProvider = new ScryfallTagProvider();
+            _scryfallTagProvider = new ScryfallTagProvider(SettingsProvider.ScryfallTagsFilePath());
             _cards = new Dictionary<string, Card>();
             _cardIdentifierColumnNumbers = new Dictionary<string, int>();
             _cardDataColumnNumbers = new Dictionary<string, int>();
@@ -381,18 +381,20 @@ namespace EdhDeckBuilder.Service
         public async Task<List<string>> GetScryfallTagsForCardAsync(string cardName,
             CancellationTokenSource cts)
         {
-            var resultDictionary = await GetScryfallTagsForCardsAsync(new List<string> { cardName },
+            var scryfallTagsResult = await GetScryfallTagsForCardsAsync(new List<string> { cardName },
                 cts);
+            var resultDictionary = scryfallTagsResult.Item1;
 
             if (!resultDictionary.ContainsKey(cardName)) return new List<string>();
 
             return resultDictionary[cardName];
         }
 
-        public async Task<Dictionary<string, List<string>>> GetScryfallTagsForCardsAsync(List<string> manifest,
+        public async Task<Tuple<Dictionary<string, List<string>>, List<string>>> GetScryfallTagsForCardsAsync(List<string> manifest,
             CancellationTokenSource cts)
         {
             var result = new Dictionary<string, List<string>>();
+            var errors = new List<string>();
             var input = new Dictionary<string, string>();
 
             // Determine which cards are invalid and which cards already have tags.
@@ -402,7 +404,7 @@ namespace EdhDeckBuilder.Service
 
                 if (card == null)
                 {
-                    // TODO: Report failure somehow.
+                    errors.Add($"Unable to locate {cardName} in memory or in files.");
                     continue;
                 }
 
@@ -422,7 +424,10 @@ namespace EdhDeckBuilder.Service
             // Fetch remaining tags from Scryfall, if necessary.
             if (input.Keys.Any())
             {
-                var tagsFromScryfall = await _scryfallTagProvider.GetScryfallTagsAsync(input);
+                var tagsFromScryfallResult = await _scryfallTagProvider.GetScryfallTagsAsync(input);
+                var tagsFromScryfall = tagsFromScryfallResult.Item1;
+                var tagsFromScryfallErrors = tagsFromScryfallResult.Item2;
+                errors.AddRange(tagsFromScryfallErrors);
 
                 // Update tags for each card.
                 await Task.Run(() =>
@@ -441,7 +446,10 @@ namespace EdhDeckBuilder.Service
                 });
             }
 
-            return result;
+            // Persist them to disk.
+            await _scryfallTagProvider.SaveScryfallTagsAsync();
+
+            return new Tuple<Dictionary<string, List<string>>, List<string>>(result, errors);
         }
 
         public Image GetCardBack()

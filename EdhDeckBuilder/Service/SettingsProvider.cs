@@ -29,5 +29,16 @@ namespace EdhDeckBuilder.Service
             Properties.Settings.Default.RolesFilePath = newPath;
             Properties.Settings.Default.Save();
         }
+
+        public static string ScryfallTagsFilePath()
+        {
+            return Properties.Settings.Default.ScryfallTagsFilePath;
+        }
+
+        public static void UpdateScryfallTagsFilePath(string newPath)
+        {
+            Properties.Settings.Default.ScryfallTagsFilePath = newPath;
+            Properties.Settings.Default.Save();
+        }
     }
 }

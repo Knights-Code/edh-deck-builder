@@ -15,7 +15,7 @@ namespace Scryscraper.Tests
         [SetUp]
         public void SetUp()
         {
-            _scryfallTagProvider = new ScryfallTagProvider();
+            _scryfallTagProvider = new ScryfallTagProvider("test_tags.csv");
         }
 
         [Test]
@@ -25,7 +25,8 @@ namespace Scryscraper.Tests
             inputDictionary["Junk Jet"] = "https://tagger.scryfall.com/card/pip/60";
             inputDictionary["Sol Ring"] = "https://tagger.scryfall.com/card/otc/267";
 
-            var tagDictionary = await _scryfallTagProvider.GetScryfallTagsAsync(inputDictionary);
+            var tagsResult = await _scryfallTagProvider.GetScryfallTagsAsync(inputDictionary);
+            var tagDictionary = tagsResult.Item1;
 
             Assert.IsNotEmpty(tagDictionary);
             var card1Tags = tagDictionary["Junk Jet"];
