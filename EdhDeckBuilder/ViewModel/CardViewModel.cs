@@ -141,6 +141,15 @@ namespace EdhDeckBuilder.ViewModel
             RoleUpdated.Invoke(new RoleUpdatedSenders { CardVm = this, RoleVm = sender as RoleViewModel }, e);
         }
 
+        public void ApplyRole(string roleName)
+        {
+            var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == roleName);
+
+            if (roleVm == null) return;
+
+            roleVm.Applies = true;
+        }
+
         public override string ToString()
         {
             return Name;

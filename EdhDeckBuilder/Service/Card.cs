@@ -56,7 +56,8 @@ namespace EdhDeckBuilder.Service
                 CardImage = CardImage,
                 BackImage = BackImage,
                 NumCopies = NumCopies,
-                Roles = Roles.Select((role) => role.ToModel()).ToList()
+                Roles = Roles.Select((role) => role.ToModel()).ToList(),
+                ScryfallTags = ScryfallTags
             };
         }
 

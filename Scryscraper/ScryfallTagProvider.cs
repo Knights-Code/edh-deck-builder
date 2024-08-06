@@ -246,5 +246,10 @@ namespace Scryscraper
 
             return $"\"{originalString}\"";
         }
+
+        public string GetTagNameForType(string typeName)
+        {
+            return $"type:{typeName}";
+        }
     }
 }

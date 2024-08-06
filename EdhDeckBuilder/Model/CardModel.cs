@@ -19,6 +19,7 @@ namespace EdhDeckBuilder.Model
         public Image BackImage { get; set; } = null;
         public int NumCopies { get; set; }
         public List<RoleModel> Roles { get; set; }
+        public List<string> ScryfallTags { get; set; }
         public bool HasDownloadableImage => !string.IsNullOrEmpty(ScryfallId) || !string.IsNullOrEmpty(MultiverseId);
 
         public CardModel()

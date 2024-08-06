@@ -42,6 +42,33 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _selectedTagSummaryVm, value); }
         }
 
+        private ObservableCollection<DeckRoleViewModel> _deckRoleVms;
+        public ObservableCollection<DeckRoleViewModel> DeckRoleVms
+        {
+            get { return _deckRoleVms; }
+            set { SetProperty(ref _deckRoleVms, value); }
+        }
+
+        private DeckRoleViewModel _selectedDeckRoleVm;
+        public DeckRoleViewModel SelectedDeckRoleVm
+        {
+            get { return _selectedDeckRoleVm; }
+            set
+            {
+                if (SetProperty(ref _selectedDeckRoleVm, value))
+                {
+                    RaisePropertyChanged(nameof(SelectedDeckRoleVm.Tags));
+                }
+            }
+        }
+
+        private string _selectedRoleTag;
+        public string SelectedRoleTag
+        {
+            get { return _selectedRoleTag; }
+            set { SetProperty(ref _selectedRoleTag, value); }
+        }
+
         private bool _canRetrieve;
         public bool CanRetrieve
         {
@@ -85,25 +112,64 @@ namespace EdhDeckBuilder.ViewModel
 
         public ICommand RetrieveCommand { get; set; }
         public ICommand ResetFilterCommand { get; set; }
+        public ICommand RemoveTagFromRoleCommand { get; set; }
+        public ICommand AddTagToRoleCommand { get; set; }
+        public ICommand UpdateRolesInDeckCommand { get; set; }
 
         private List<TagSummaryViewModel> _fullTagsList;
         private readonly DeckModel _deck;
         private readonly CardProvider _cardProvider;
+        private readonly DeckBuilderViewModel _deckBuilderVm;
         private Task _filterTask;
         private CancellationTokenSource _filterCancel;
 
-        public TagManagerViewModel(string title, DeckModel deck, CardProvider cardProvider)
+        public TagManagerViewModel(
+            string title,
+            DeckModel deck,
+            CardProvider cardProvider,
+            DeckBuilderViewModel deckBuilderVm)
         {
             Title = title;
             Status = "Idle";
             CanRetrieve = true;
             _deck = deck;
             _cardProvider = cardProvider;
+            _deckBuilderVm = deckBuilderVm;
             _fullTagsList = new List<TagSummaryViewModel>();
             TagSummaryVms = new ObservableCollection<TagSummaryViewModel>();
             _filterCancel = new CancellationTokenSource();
+
             RetrieveCommand = new DelegateCommand(async () => await Retrieve());
             ResetFilterCommand = new DelegateCommand(ResetFilter);
+            AddTagToRoleCommand = new DelegateCommand(AddTagToRole);
+            RemoveTagFromRoleCommand = new DelegateCommand(RemoveTagFromRole);
+            UpdateRolesInDeckCommand = new DelegateCommand(UpdateRolesInDeck);
+
+            DeckRoleVms = new ObservableCollection<DeckRoleViewModel>();
+            var rampRoleVm = new DeckRoleViewModel("Ramp");
+            DeckRoleVms.Add(rampRoleVm);
+        }
+
+        public void UpdateRolesInDeck()
+        {
+            _deckBuilderVm.UpdateRolesWithTags(DeckRoleVms.ToList(),
+                new CancellationTokenSource());
+        }
+
+        public void AddTagToRole()
+        {
+            if (SelectedTagSummaryVm == null) return;
+            if (SelectedDeckRoleVm == null) return;
+
+            SelectedDeckRoleVm.AddTag(SelectedTagSummaryVm.Name);
+        }
+
+        public void RemoveTagFromRole()
+        {
+            if (SelectedDeckRoleVm == null) return;
+            if (string.IsNullOrEmpty(SelectedRoleTag)) return;
+
+            SelectedDeckRoleVm.RemoveTag(SelectedRoleTag);
         }
 
         public void ResetFilter()
@@ -267,8 +333,55 @@ namespace EdhDeckBuilder.ViewModel
             public override string ToString()
             {
                 return $"{Name}: {Count}";
-                return $"{Name}: {Count} ({string.Join(", ", Cards)})";
             }
+        }
+    }
+
+    public class DeckRoleViewModel : ViewModelBase
+    {
+        private ObservableCollection<string> _tags;
+        public ObservableCollection<string> Tags
+        {
+            get { return _tags; }
+            set { SetProperty(ref _tags, value); }
+        }
+
+        private string _name;
+        public string Name
+        {
+            get { return _name; }
+            set { SetProperty(ref _name, value); }
+        }
+
+        public DeckRoleViewModel(string name)
+        {
+            Name = name;
+            Tags = new ObservableCollection<string>();
+        }
+
+        public void AddTag(string tag)
+        {
+            if (Tags.Contains(tag))
+            {
+                return;
+            }
+
+            Tags.Add(tag);
+        }
+
+        public void RemoveTag(string tag)
+        {
+            if (!Tags.Contains(tag))
+            {
+                return;
+            }
+
+            Tags.Remove(tag);
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

@@ -546,10 +546,37 @@ namespace EdhDeckBuilder.ViewModel
             var tagManagerVm = new TagManagerViewModel(
                 $"Manage Scryfall Tags for {Name}",
                 ToModel(),
-                _cardProvider);
+                _cardProvider,
+                this);
 
             tagManagerWindow.DataContext = tagManagerVm;
             tagManagerWindow.Show();
+        }
+
+        public async void UpdateRolesWithTags(
+            List<DeckRoleViewModel> rolesWithTags,
+            CancellationTokenSource cts)
+        {
+            foreach (var cardVm in CardVms)
+            {
+                // Get card model with updated Scryfall tags.
+                var modelWithUpdatedTags = await _cardProvider.TryGetCardModelAsync(cardVm.Name, cts);
+
+                var allTags = modelWithUpdatedTags.ScryfallTags
+                    .Union(modelWithUpdatedTags.AllTypes
+                    .Select((type) => _cardProvider.GetTagNameForType(type)));
+
+                // Apply roles that have one or more tags in allTags.
+                foreach (var roleWithTags in rolesWithTags)
+                {
+                    if (!roleWithTags.Tags.Any(allTags.Contains)) continue;
+
+                    // This role has one or more tags in common with allTags.
+                    // Apply the role.
+                    cardVm.ApplyRole(roleWithTags.Name);
+                    UpdateRoleHeaders(cardVm);
+                }
+            }
         }
 
         public void DecklistDiff()

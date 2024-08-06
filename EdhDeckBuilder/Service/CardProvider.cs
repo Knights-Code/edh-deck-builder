@@ -194,6 +194,11 @@ namespace EdhDeckBuilder.Service
             return result;
         }
 
+        public string GetTagNameForType(string typeName)
+        {
+            return _scryfallTagProvider.GetTagNameForType(typeName);
+        }
+
         private async Task<Card> TryGetCardAsync(string name, CancellationTokenSource cancellationTokenSource)
         {
             var lowerCaseName = name.ToLower();
@@ -411,7 +416,8 @@ namespace EdhDeckBuilder.Service
                 result[cardName] = new List<string>();
 
                 // Add tags for each of the card's types.
-                result[cardName].AddRange(card.AllTypes.Select((type) => $"type:{type}"));
+                result[cardName].AddRange(card.AllTypes
+                    .Select((type) => GetTagNameForType(type)));
 
                 if (card.ScryfallTags.Any())
                 {
