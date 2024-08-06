@@ -55,5 +55,34 @@ namespace EdhDeckBuilder.Service
 
             return result;
         }
+
+        public static List<string> DefaultTagsForRole(string role)
+        {
+            var result = new List<string>();
+
+            switch (role)
+            {
+                case "Ramp":
+                    result.Add("ramp");
+                    break;
+                case "Draw":
+                    result.Add("card advantage");
+                    break;
+                case "Removal":
+                    result.Add("removal");
+                    break;
+                case "Wipe":
+                    result.Add("sweeper");
+                    break;
+                case "Land":
+                    result.Add("type:Land");
+                    break;
+                case "Tapland":
+                    result.Add("tapland");
+                    break;
+            }
+
+            return result;
+        }
     }
 }

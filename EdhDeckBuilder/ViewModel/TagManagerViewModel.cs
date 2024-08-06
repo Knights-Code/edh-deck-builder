@@ -146,8 +146,17 @@ namespace EdhDeckBuilder.ViewModel
             UpdateRolesInDeckCommand = new DelegateCommand(UpdateRolesInDeck);
 
             DeckRoleVms = new ObservableCollection<DeckRoleViewModel>();
-            var rampRoleVm = new DeckRoleViewModel("Ramp");
-            DeckRoleVms.Add(rampRoleVm);
+            foreach (var role in TemplatesAndDefaults.DefaultRoleSet().Union(deck.CustomRoles))
+            {
+                var newGrouping = new DeckRoleViewModel(role);
+                var existingGrouping = deck.RoleAndTagGroupings.FirstOrDefault(g => g.RoleName == role);
+
+                if (existingGrouping != null) newGrouping.Tags = new ObservableCollection<string>(existingGrouping.Tags);
+                else newGrouping.Tags = new ObservableCollection<string>(
+                    TemplatesAndDefaults.DefaultTagsForRole(role));
+
+                DeckRoleVms.Add(newGrouping);
+            }
         }
 
         public void UpdateRolesInDeck()
@@ -351,6 +360,11 @@ namespace EdhDeckBuilder.ViewModel
         {
             get { return _name; }
             set { SetProperty(ref _name, value); }
+        }
+
+        public DeckRoleViewModel()
+        {
+
         }
 
         public DeckRoleViewModel(string name)

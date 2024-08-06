@@ -356,6 +356,20 @@ namespace EdhDeckBuilder.ViewModel
             _roleAndTagGroupings = deckModel.RoleAndTagGroupings.Select((grouping) =>
                 new DeckRoleViewModel(grouping)).ToList();
 
+            // Populate groupings with defaults, if some groupings are empty.
+            var allRoles = TemplatesAndDefaults.DefaultRoleSet().Union(deckModel.CustomRoles);
+            foreach (var role in allRoles)
+            {
+                if (_roleAndTagGroupings.Any(g => g.Name == role)) continue;
+
+                _roleAndTagGroupings.Add(new DeckRoleViewModel
+                {
+                    Name = role,
+                    Tags = new ObservableCollection<string>(
+                        TemplatesAndDefaults.DefaultTagsForRole(role))
+                });
+            }
+
             // TODO: Validate model before attempting to load cards.
             var manifest = deckModel.Cards.Select((c) => c.Name).ToList();
 

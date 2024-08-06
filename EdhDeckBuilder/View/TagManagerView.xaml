@@ -29,7 +29,7 @@
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
             <!-- Tag list and filter -->
-            <GroupBox Header="Tags" Grid.Column="0" Margin="10, 0,0,0">
+            <GroupBox Header="Tags" Grid.Column="0" Margin="10, 0, 0, 0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
