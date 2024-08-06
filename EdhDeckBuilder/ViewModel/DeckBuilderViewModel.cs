@@ -260,20 +260,24 @@ namespace EdhDeckBuilder.ViewModel
 
         public async Task ImportFromClipboardAsync()
         {
-            var cardsToAdd = UtilityFunctions.ParseCardsFromText(_clipboard.GetClipboardText());
-            var failures = new List<string>();
+            var clipboardCardModels = UtilityFunctions.ParseCardsFromText(_clipboard.GetClipboardText());
+            var cardsToAddToUi = await LoadCardsForDeckAsync(clipboardCardModels);
 
-            foreach (var cardModel in cardsToAdd)
+            // Update UI.
+            if (cardsToAddToUi.Any())
             {
-                if (!await AddCardAsync(cardModel.Name, cardModel.NumCopies))
+                foreach (var cardStub in cardsToAddToUi)
                 {
-                    failures.Add(cardModel.Name);
-                }
-            }
+                    // Load roles from role DB.
+                    var cardRoles = _roleProvider.GetRolesForCard(cardStub.CardModel.Name);
 
-            if (failures.Any())
-            {
-                MessageBox.Show($"Failed to add the following cards:\n{string.Join(Environment.NewLine, failures)}");
+                    if (cardRoles != null)
+                    {
+                        cardStub.CardModel.Roles.AddRange(cardRoles);
+                    }
+
+                    AddCard(cardStub.CardModel, cardStub.NumCopies, cardStub.Roles, null, true);
+                }
             }
         }
 
@@ -639,7 +643,7 @@ namespace EdhDeckBuilder.ViewModel
 
                     // This role has one or more tags in common with allTags.
                     // Apply the role.
-                    cardVm.ApplyRole(roleWithTags.Name);
+                    cardVm.ApplyRole(roleWithTags);
                     UpdateRoleHeaders(cardVm);
                 }
             }

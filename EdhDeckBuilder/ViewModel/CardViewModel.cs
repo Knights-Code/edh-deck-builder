@@ -164,9 +164,19 @@ namespace EdhDeckBuilder.ViewModel
             RoleUpdated.Invoke(new RoleUpdatedSenders { CardVm = this, RoleVm = sender as RoleViewModel }, e);
         }
 
-        public void ApplyRole(string roleName)
+        public void ApplyRole(DeckRoleViewModel deckRoleViewModel)
         {
-            var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == roleName);
+            if (deckRoleViewModel.Renamed())
+            {
+                var roleVmToRename = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.OriginalName);
+
+                if (roleVmToRename != null)
+                {
+                    roleVmToRename.Name = deckRoleViewModel.Name;
+                }
+            }
+
+            var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
             if (roleVm == null) return;
 
