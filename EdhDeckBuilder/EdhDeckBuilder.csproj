@@ -78,6 +78,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\DeckModel.cs" />
+    <Compile Include="Model\DeckRoleTagModel.cs" />
     <Compile Include="Model\RoleModel.cs" />
     <Compile Include="Model\TemplateModel.cs" />
     <Compile Include="Service\Card.cs" />

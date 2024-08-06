@@ -82,7 +82,11 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _roleVms, value); }
         }
 
-        public CardViewModel(CardModel model, List<string> customRoles = null, List<RoleModel> roleRankings = null)
+        public CardViewModel(
+            CardModel model,
+            List<string> customRoles = null,
+            List<RoleModel> roleRankings = null,
+            List<DeckRoleTagModel> deckRoleTagModels = null)
         {
             _name = model.Name;
             FrontImage = model.CardImage;
@@ -109,12 +113,31 @@ namespace EdhDeckBuilder.ViewModel
                 if (roleRankings != null)
                 {
                     var rankingForRole = roleRankings.FirstOrDefault(rr => rr.Name == roleVm.Name);
+                    var roleTagsIncluded = false;
 
                     if (rankingForRole != null) roleVm.UpdateValueSilently(rankingForRole.Value);
                 }
 
                 if (!roleModel.Applies) continue;
 
+                roleVm.ApplySilently();
+            }
+
+            if (deckRoleTagModels == null) return;
+
+            foreach (var roleAndTagGrouping in deckRoleTagModels)
+            {
+                // Check if tags for role include card tags.
+                var allTags = model.ScryfallTags
+                    .Union(model.AllTypes.Select((type) => $"type:{type}"));
+
+                if (!roleAndTagGrouping.Tags.Any(allTags.Contains)) continue;
+
+                var roleVm = _roleVms.FirstOrDefault(vm => vm.Name == roleAndTagGrouping.RoleName);
+
+                if (roleVm == null) continue;
+
+                roleVm.UpdateValueSilently(1);
                 roleVm.ApplySilently();
             }
         }

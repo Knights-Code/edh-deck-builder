@@ -21,6 +21,7 @@ namespace EdhDeckBuilder.ViewModel
         private CardProvider _cardProvider;
         private DeckProvider _deckProvider;
         private RoleProvider _roleProvider;
+        private List<DeckRoleViewModel> _roleAndTagGroupings = new List<DeckRoleViewModel>();
         private Dictionary<string, int> _lastNumCopiesForCard = new Dictionary<string, int>();
         private IClipboard _clipboard;
 
@@ -146,7 +147,7 @@ namespace EdhDeckBuilder.ViewModel
             return CardVms.Sum(vm => vm.NumCopies);
         }
 
-        public bool AddCard(CardModel cardModel, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null)
+        public bool AddCard(CardModel cardModel, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null, bool ignoreTags = false)
         {
             if (cardModel == null) return false;
 
@@ -169,7 +170,11 @@ namespace EdhDeckBuilder.ViewModel
                 deckRoles = deckBuilderVmCustomRoles;
             }
 
-            var cardVm = new CardViewModel(cardModel, deckRoles, cardRoleRankings);
+            var cardVm = new CardViewModel(
+                cardModel,
+                deckRoles,
+                cardRoleRankings,
+                ignoreTags ? null : _roleAndTagGroupings.Select((grouping) => grouping.ToModel()).ToList());
 
             var cardBack = _cardProvider.GetCardBack();
             cardVm.FrontImage = cardBack;
@@ -347,6 +352,10 @@ namespace EdhDeckBuilder.ViewModel
         public async Task LoadDeck(string deckPath)
         {
             var deckModel = _deckProvider.LoadDeck(deckPath);
+
+            _roleAndTagGroupings = deckModel.RoleAndTagGroupings.Select((grouping) =>
+                new DeckRoleViewModel(grouping)).ToList();
+
             // TODO: Validate model before attempting to load cards.
             var manifest = deckModel.Cards.Select((c) => c.Name).ToList();
 
@@ -365,7 +374,7 @@ namespace EdhDeckBuilder.ViewModel
 
                 foreach (var cardStub in cardsToAddToUi)
                 {
-                    AddCard(cardStub.CardModel, cardStub.NumCopies, cardStub.Roles, deckModel.CustomRoles);
+                    AddCard(cardStub.CardModel, cardStub.NumCopies, cardStub.Roles, deckModel.CustomRoles, true);
                 }
 
                 SettingsProvider.UpdateDeckFilePath(deckPath);
@@ -553,6 +562,11 @@ namespace EdhDeckBuilder.ViewModel
             tagManagerWindow.Show();
         }
 
+        /// <summary>
+        /// Used by TagManagerViewModel to mass update card roles.
+        /// </summary>
+        /// <param name="rolesWithTags"></param>
+        /// <param name="cts"></param>
         public async void UpdateRolesWithTags(
             List<DeckRoleViewModel> rolesWithTags,
             CancellationTokenSource cts)
@@ -577,6 +591,8 @@ namespace EdhDeckBuilder.ViewModel
                     UpdateRoleHeaders(cardVm);
                 }
             }
+
+            _roleAndTagGroupings = rolesWithTags;
         }
 
         public void DecklistDiff()
@@ -698,6 +714,7 @@ namespace EdhDeckBuilder.ViewModel
 
             result.AddCards(CardVms.Select(cardVm => cardVm.ToModel()));
             result.CustomRoles = GetCustomRoles();
+            result.RoleAndTagGroupings = _roleAndTagGroupings.Select((grouping) => grouping.ToModel()).ToList();
 
             return result;
         }

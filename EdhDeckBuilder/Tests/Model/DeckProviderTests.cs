@@ -122,7 +122,7 @@ namespace EdhDeckBuilder.Tests.Model
         {
             using (var writer = new StreamWriter(new FileStream(_testDeckFilename, FileMode.OpenOrCreate)))
             {
-                writer.WriteLine("Test Deck,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland,Unplayables");
+                writer.WriteLine("Test Deck,,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland,Unplayables");
                 writer.WriteLine("10,Forest");
                 writer.WriteLine("1,Skullclamp");
                 writer.WriteLine("1,\"Ghalta, Primal Hunger\"");
@@ -243,6 +243,30 @@ namespace EdhDeckBuilder.Tests.Model
             Assert.NotNull(dinosaurRole);
             Assert.AreEqual(2, drawRole.Value);
             Assert.AreEqual(5, dinosaurRole.Value);
+        }
+
+        [Test]
+        public void LoadDeck_WhenLoadingDeckWithoutVersionValue_MigratesDeckFileToLatestVersion()
+        {
+            using (var writer = new StreamWriter(new FileStream(_testDeckFilename, FileMode.OpenOrCreate)))
+            {
+                writer.WriteLine("Test Deck,,Ramp,Draw,Removal,Wipe,Land,Standalone,Enhancer,Enabler,Tapland");
+                writer.WriteLine("1,\"Ghalta, Primal Hunger\"");
+                writer.WriteLine("10,Forest");
+            }
+
+            var deckProvider = new DeckProvider();
+            var deck = deckProvider.LoadDeck(_testDeckFilename);
+
+            using (var reader = new StreamReader(_testDeckFilename))
+            {
+                var fileText = reader.ReadToEnd();
+                Assert.AreEqual("Deck File Format Version:,1.0\r\n" +
+                    "Test Deck,," + // Deck line.
+                    "Ramp,Draw,Removal,Wipe,Land,Tapland\r\n" + // Role headers.
+                    ",,,,,,,\r\n" + // Tag groupings.
+                    "1,\"Ghalta, Primal Hunger\",,,,,,\r\n10,Forest,,,,,,\r\n", fileText);
+            }
         }
     }
 }

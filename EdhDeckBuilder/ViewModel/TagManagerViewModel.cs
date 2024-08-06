@@ -359,6 +359,12 @@ namespace EdhDeckBuilder.ViewModel
             Tags = new ObservableCollection<string>();
         }
 
+        public DeckRoleViewModel(DeckRoleTagModel model)
+        {
+            Name = model.RoleName;
+            Tags = new ObservableCollection<string>(model.Tags);
+        }
+
         public void AddTag(string tag)
         {
             if (Tags.Contains(tag))
@@ -377,6 +383,15 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             Tags.Remove(tag);
+        }
+
+        public DeckRoleTagModel ToModel()
+        {
+            return new DeckRoleTagModel
+            {
+                RoleName = Name,
+                Tags = Tags.ToList()
+            };
         }
 
         public override string ToString()
