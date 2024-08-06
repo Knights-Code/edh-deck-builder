@@ -145,18 +145,8 @@ namespace EdhDeckBuilder.ViewModel
             RemoveTagFromRoleCommand = new DelegateCommand(RemoveTagFromRole);
             UpdateRolesInDeckCommand = new DelegateCommand(UpdateRolesInDeck);
 
-            DeckRoleVms = new ObservableCollection<DeckRoleViewModel>();
-            foreach (var role in TemplatesAndDefaults.DefaultRoleSet().Union(deck.CustomRoles))
-            {
-                var newGrouping = new DeckRoleViewModel(role);
-                var existingGrouping = deck.RoleAndTagGroupings.FirstOrDefault(g => g.RoleName == role);
-
-                if (existingGrouping != null) newGrouping.Tags = new ObservableCollection<string>(existingGrouping.Tags);
-                else newGrouping.Tags = new ObservableCollection<string>(
-                    TemplatesAndDefaults.DefaultTagsForRole(role));
-
-                DeckRoleVms.Add(newGrouping);
-            }
+            DeckRoleVms = new ObservableCollection<DeckRoleViewModel>(
+                deck.RoleAndTagGroupings.Select(gModel => new DeckRoleViewModel(gModel)));
         }
 
         public void UpdateRolesInDeck()

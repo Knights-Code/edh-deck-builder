@@ -153,14 +153,6 @@ namespace EdhDeckBuilder.ViewModel
 
             if (CardVms.Any(vm => vm.Name == cardModel.Name)) return false; // Don't add dupes.
 
-            // Load roles from role DB.
-            var cardRoles = _roleProvider.GetRolesForCard(cardModel.Name);
-
-            if (cardRoles != null)
-            {
-                cardModel.Roles.AddRange(cardRoles);
-            }
-
             cardModel.NumCopies = numCopies;
 
             var deckBuilderVmCustomRoles = GetCustomRoles();
@@ -189,10 +181,33 @@ namespace EdhDeckBuilder.ViewModel
             return true;
         }
 
+        /// <summary>
+        /// Attempts to add a single card, including all its roles.
+        /// If no roles are found, Scryfall tags will be loaded.
+        /// </summary>
+        /// <param name="cardName"></param>
+        /// <param name="numCopies"></param>
+        /// <param name="cardRoleRankings"></param>
+        /// <param name="deckRoles"></param>
+        /// <returns></returns>
         public async Task<bool> AddCardAsync(string cardName, int numCopies = 1, List<RoleModel> cardRoleRankings = null, List<string> deckRoles = null)
         {
-            var cardModel = await _cardProvider.TryGetCardModelAsync(cardName,
-                new CancellationTokenSource());
+            var cts = new CancellationTokenSource();
+            var cardModel = await _cardProvider.TryGetCardModelAsync(cardName, cts);
+
+            // Load roles from role DB.
+            var cardRoles = _roleProvider.GetRolesForCard(cardModel.Name);
+
+            if (cardRoles != null)
+            {
+                cardModel.Roles.AddRange(cardRoles);
+            }
+            else if (!cardModel.ScryfallTags.Any())
+            {
+                // Try to add roles using Scryfall tags.
+                var scryfallTags = await _cardProvider.GetScryfallTagsForCardAsync(cardName, cts);
+                cardModel.ScryfallTags = scryfallTags;
+            }
 
             return AddCard(cardModel, numCopies, cardRoleRankings, deckRoles);
         }
@@ -388,6 +403,14 @@ namespace EdhDeckBuilder.ViewModel
 
                 foreach (var cardStub in cardsToAddToUi)
                 {
+                    // Load roles from role DB.
+                    var cardRoles = _roleProvider.GetRolesForCard(cardStub.CardModel.Name);
+
+                    if (cardRoles != null)
+                    {
+                        cardStub.CardModel.Roles.AddRange(cardRoles);
+                    }
+
                     AddCard(cardStub.CardModel, cardStub.NumCopies, cardStub.Roles, deckModel.CustomRoles, true);
                 }
 
@@ -525,27 +548,23 @@ namespace EdhDeckBuilder.ViewModel
             {
                 AddRoleHeader(templateModel);
             }
+
+            _roleAndTagGroupings = new List<DeckRoleViewModel>();
+
+            foreach (var role in TemplatesAndDefaults.DefaultRoleSet())
+            {
+                _roleAndTagGroupings.Add(new DeckRoleViewModel
+                {
+                    Name = role,
+                    Tags = new ObservableCollection<string>(
+                        TemplatesAndDefaults.DefaultTagsForRole(role))
+                });
+            }
         }
 
         private void AddRoleHeader(TemplateModel templateModel)
         {
             AddRoleHeader(templateModel.Role, templateModel.Minimum, templateModel.Maximum);
-        }
-
-        /// <summary>
-        /// Counts each card view model's roles and updates the column headers accordingly.
-        /// </summary>
-        private void UpdateRoleCounts()
-        {
-            foreach (var cardVm in CardVms)
-            {
-                foreach (var roleVm in cardVm.RoleVms)
-                {
-                    if (!roleVm.Applies) continue;
-
-                    TemplateVms.First(vm => vm.Role == roleVm.Name).Current += 1;
-                }
-            }
         }
 
         private List<string> GetCustomRoles()
