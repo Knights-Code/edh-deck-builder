@@ -201,7 +201,7 @@ namespace EdhDeckBuilder.Service
                     var tagsForRole = tagGroupings[i].Split(';');
                     var newRoleAndTagGrouping = new DeckRoleTagModel
                     {
-                        RoleName = allRoles[i],
+                        RoleName = allRoles[i - 2], // Adjust for loop's starting value for i.
                         Tags = tagsForRole.ToList()
                     };
 
