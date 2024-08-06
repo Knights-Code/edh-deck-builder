@@ -498,6 +498,13 @@ namespace EdhDeckBuilder.ViewModel
                 card.AddRole(customRoleName);
             }
 
+            // Create grouping for new role.
+            _roleAndTagGroupings.Add(new DeckRoleViewModel
+            {
+                Name = customRoleName,
+                Tags = new ObservableCollection<string>()
+            });
+
             RaisePropertyChanged(nameof(NumRoles));
         }
 
@@ -604,6 +611,18 @@ namespace EdhDeckBuilder.ViewModel
             List<DeckRoleViewModel> rolesWithTags,
             CancellationTokenSource cts)
         {
+            // Update headers if role name changed.
+            foreach (var renamedRole in rolesWithTags.Where(roleWithTags => roleWithTags.Renamed()))
+            {
+                var headerToUpdate = TemplateVms
+                    .FirstOrDefault(templateVm => templateVm.Role == renamedRole.OriginalName);
+
+                if (headerToUpdate != null)
+                {
+                    headerToUpdate.Role = renamedRole.Name;
+                }
+            }
+
             foreach (var cardVm in CardVms)
             {
                 // Get card model with updated Scryfall tags.

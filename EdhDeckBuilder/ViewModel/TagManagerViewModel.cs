@@ -352,6 +352,8 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _name, value); }
         }
 
+        public string OriginalName { get; private set; }
+
         public DeckRoleViewModel()
         {
 
@@ -365,6 +367,7 @@ namespace EdhDeckBuilder.ViewModel
 
         public DeckRoleViewModel(DeckRoleTagModel model)
         {
+            OriginalName = model.RoleName;
             Name = model.RoleName;
             Tags = new ObservableCollection<string>(model.Tags);
         }
@@ -387,6 +390,11 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             Tags.Remove(tag);
+        }
+
+        public bool Renamed()
+        {
+            return Name != OriginalName;
         }
 
         public DeckRoleTagModel ToModel()
