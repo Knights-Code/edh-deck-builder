@@ -3,6 +3,7 @@ using EdhDeckBuilder.Service;
 using Microsoft.Practices.Prism.Commands;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -27,11 +28,18 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _tagsSummary, value); }
         }
 
-        private List<string> _tagSummaries;
-        public List<string> TagSummaries
+        private ObservableCollection<TagSummaryViewModel> _tagSummaryVms;
+        public ObservableCollection<TagSummaryViewModel> TagSummaryVms
         {
-            get { return _tagSummaries; }
-            set { SetProperty(ref _tagSummaries, value); }
+            get { return _tagSummaryVms; }
+            set { SetProperty(ref _tagSummaryVms, value); }
+        }
+
+        private TagSummaryViewModel _selectedTagSummaryVm;
+        public TagSummaryViewModel SelectedTagSummaryVm
+        {
+            get { return _selectedTagSummaryVm; }
+            set { SetProperty(ref _selectedTagSummaryVm, value); }
         }
 
         private bool _canRetrieve;
@@ -68,10 +76,17 @@ namespace EdhDeckBuilder.ViewModel
             }
         }
 
+        private List<string> _deckRoles;
+        public List<string> DeckRoles
+        {
+            get { return _deckRoles; }
+            set { SetProperty(ref _deckRoles, value); }
+        }
+
         public ICommand RetrieveCommand { get; set; }
         public ICommand ResetFilterCommand { get; set; }
 
-        private List<string> _fullTagsList;
+        private List<TagSummaryViewModel> _fullTagsList;
         private readonly DeckModel _deck;
         private readonly CardProvider _cardProvider;
         private Task _filterTask;
@@ -84,8 +99,8 @@ namespace EdhDeckBuilder.ViewModel
             CanRetrieve = true;
             _deck = deck;
             _cardProvider = cardProvider;
-            _fullTagsList = new List<string>();
-            TagSummaries = new List<string>();
+            _fullTagsList = new List<TagSummaryViewModel>();
+            TagSummaryVms = new ObservableCollection<TagSummaryViewModel>();
             _filterCancel = new CancellationTokenSource();
             RetrieveCommand = new DelegateCommand(async () => await Retrieve());
             ResetFilterCommand = new DelegateCommand(ResetFilter);
@@ -111,20 +126,20 @@ namespace EdhDeckBuilder.ViewModel
 
         public async Task FilterAsync(string filterText, CancellationTokenSource cts)
         {
-            var filteredList = new List<string>();
+            var filteredList = new List<TagSummaryViewModel>();
 
             await Task.Run(() =>
             {
-                foreach (var tagSummary in _fullTagsList)
+                foreach (var tagSummaryVm in _fullTagsList)
                 {
                     if (cts.IsCancellationRequested)
                     {
                         break;
                     }
 
-                    if (tagSummary.ToLower().Contains(filterText.ToLower()))
+                    if (tagSummaryVm.Name.ToLower().Contains(filterText.ToLower()))
                     {
-                        filteredList.Add(tagSummary);
+                        filteredList.Add(tagSummaryVm);
                     }
                 }
             });
@@ -134,7 +149,8 @@ namespace EdhDeckBuilder.ViewModel
                 return;
             }
 
-            TagSummaries = filteredList;
+            TagSummaryVms = new ObservableCollection<TagSummaryViewModel>(filteredList);
+            RaisePropertyChanged(nameof(TagSummaryVms));
         }
 
         public async Task Retrieve()
@@ -155,26 +171,27 @@ namespace EdhDeckBuilder.ViewModel
             var errors = scryfallTagsResult.Item2;
             Status = "Tags retrieved. Compiling summary...";
             Errors = $"Errors:\n{string.Join("\n", errors)}";
-            TagSummaries = await Task.Run(() => CompileTagsSummary(tagsDictionary));
-            _fullTagsList = TagSummaries;
+            TagSummaryVms = await Task.Run(() => CompileTagsSummary(tagsDictionary));
+            _fullTagsList = TagSummaryVms.ToList();
+            RaisePropertyChanged(nameof(TagSummaryVms));
             Status = $"Retrieval complete! Retrieved tags for {tagsDictionary.Keys.Count} card(s).";
 
             CanRetrieve = true;
         }
 
-        private List<string> CompileTagsSummary(Dictionary<string, List<string>> tagsDictionary)
+        private ObservableCollection<TagSummaryViewModel> CompileTagsSummary(Dictionary<string, List<string>> tagsDictionary)
         {
-            var result = new List<string>();
+            var result = new List<TagSummaryViewModel>();
 
             // Create dictionary of tag counts keyed by tag name.
-            var tagSummaries = new Queue<TagSummary>();
+            var tagSummaries = new Queue<TagSummaryViewModel>();
 
             // Queue up the staple tags first.
-            tagSummaries.Enqueue(new TagSummary("ramp", 0));
-            tagSummaries.Enqueue(new TagSummary("card advantage", 0));
-            tagSummaries.Enqueue(new TagSummary("removal", 0));
-            tagSummaries.Enqueue(new TagSummary("sweeper", 0));
-            tagSummaries.Enqueue(new TagSummary("tapland", 0));
+            tagSummaries.Enqueue(new TagSummaryViewModel("ramp", 0));
+            tagSummaries.Enqueue(new TagSummaryViewModel("card advantage", 0));
+            tagSummaries.Enqueue(new TagSummaryViewModel("removal", 0));
+            tagSummaries.Enqueue(new TagSummaryViewModel("sweeper", 0));
+            tagSummaries.Enqueue(new TagSummaryViewModel("tapland", 0));
 
             foreach (var cardName in tagsDictionary.Keys)
             {
@@ -184,7 +201,7 @@ namespace EdhDeckBuilder.ViewModel
                 {
                     if (!tagSummaries.Any((tagSummary) => tagSummary.Name == tag))
                     {
-                        var newTagSummary = new TagSummary(tag);
+                        var newTagSummary = new TagSummaryViewModel(tag);
                         newTagSummary.AddCard(cardName);
                         tagSummaries.Enqueue(newTagSummary);
                         continue;
@@ -197,29 +214,38 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             // Print staple counts first.
-            for (var i=0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
-                result.Add(tagSummaries.Dequeue().ToString() + "\n");
+                result.Add(tagSummaries.Dequeue());
             }
 
             // Sort the rest descending by count.
-            tagSummaries = new Queue<TagSummary>(
+            tagSummaries = new Queue<TagSummaryViewModel>(
                 tagSummaries.OrderByDescending((summary) => summary.Count));
 
             while (tagSummaries.Any())
             {
-                result.Add(tagSummaries.Dequeue().ToString() + "\n");
+                result.Add(tagSummaries.Dequeue());
             }
 
-            return result;
+            return new ObservableCollection<TagSummaryViewModel>(result);
         }
 
-        class TagSummary
+        public class TagSummaryViewModel : ViewModelBase
         {
             public string Name { get; }
             public int Count { get; private set; }
-            public List<string> Cards {get; private set; }
-            public TagSummary(string name, int count = 1)
+
+            private List<string> _cards;
+            public List<string> Cards
+            {
+                get { return _cards; }
+                set { SetProperty(ref _cards, value); }
+            }
+
+            public string Summary => ToString();
+
+            public TagSummaryViewModel(string name, int count = 1)
             {
                 Name = name;
                 Count = count;
@@ -229,11 +255,13 @@ namespace EdhDeckBuilder.ViewModel
             public void AddCard(string cardName)
             {
                 Cards.Add(cardName);
+                RaisePropertyChanged(nameof(Summary));
             }
 
             public void IncrementCount()
             {
                 Count = ++Count;
+                RaisePropertyChanged(nameof(Summary));
             }
 
             public override string ToString()

@@ -13,14 +13,14 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
-            <RowDefinition Height="3*" />
+            <RowDefinition Height="5*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Button Grid.Row="0" Command="{Binding RetrieveCommand}" IsEnabled="{Binding CanRetrieve}">
+        <Button Grid.Row="0" Margin="10" Command="{Binding RetrieveCommand}" IsEnabled="{Binding CanRetrieve}">
             Retrieve Scryfall tags and counts for deck
         </Button>
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="1" Margin="10, 0, 10, 10">
             <TextBlock Text="{Binding Errors}" TextWrapping="Wrap" />
         </ScrollViewer>
         <Grid Grid.Row="2">
@@ -29,24 +29,34 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Text="{Binding FilterInput, UpdateSourceTrigger=PropertyChanged}" />
-                    <Button Grid.Column="1" Command="{Binding ResetFilterCommand}">Reset</Button>
+            <GroupBox Header="Tags" Grid.Column="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="10, 10, 10, 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding FilterInput, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Padding="10, 3, 10, 3"
+                            Margin="5, 0, 0 , 0"
+                            Grid.Column="1"
+                            Command="{Binding ResetFilterCommand}">Reset</Button>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1" Margin="10">
+                        <ListView ItemsSource="{Binding TagSummaryVms}"
+                                  SelectionMode="Multiple"
+                                  SelectedItem="{Binding SelectedTagSummaryVm, Mode=TwoWay}">
+                        </ListView>
+                    </ScrollViewer>
                 </Grid>
-                <ScrollViewer Grid.Row="1">
-                    <ListView ItemsSource="{Binding TagSummaries}" />
-                </ScrollViewer>
-            </Grid>
+            </GroupBox>
         </Grid>
-        <Label Grid.Row="3" Content="{Binding Status}" />
+
+        <Label Grid.Row="3" Margin="10" Content="{Binding Status}" />
     </Grid>
 </Window>

@@ -408,11 +408,16 @@ namespace EdhDeckBuilder.Service
                     continue;
                 }
 
+                result[cardName] = new List<string>();
+
+                // Add tags for each of the card's types.
+                result[cardName].AddRange(card.AllTypes.Select((type) => $"type:{type}"));
+
                 if (card.ScryfallTags.Any())
                 {
                     // Tags were loaded already. Add to result and skip
                     // to next card.
-                    result[cardName] = card.ScryfallTags;
+                    result[cardName].AddRange(card.ScryfallTags);
                     continue;
                 }
 
@@ -440,7 +445,7 @@ namespace EdhDeckBuilder.Service
                         lock (_cards)
                         {
                             _cards[cardName.ToLower()].ScryfallTags = tagsFromScryfall[cardName];
-                            result[cardName] = tagsFromScryfall[cardName];
+                            result[cardName].AddRange(tagsFromScryfall[cardName]);
                         }
                     }
                 });
