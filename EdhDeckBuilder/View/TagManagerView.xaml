@@ -12,7 +12,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="3*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -20,8 +21,32 @@
             Retrieve Scryfall tags and counts for deck
         </Button>
         <ScrollViewer Grid.Row="1">
-            <TextBlock Grid.Row="1" Text="{Binding TagsSummary}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Errors}" TextWrapping="Wrap" />
         </ScrollViewer>
-        <Label Grid.Row="2" Content="{Binding Status}" />
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding FilterInput, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="1" Command="{Binding ResetFilterCommand}">Reset</Button>
+                </Grid>
+                <ScrollViewer Grid.Row="1">
+                    <ListView ItemsSource="{Binding TagSummaries}" />
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+        <Label Grid.Row="3" Content="{Binding Status}" />
     </Grid>
 </Window>
