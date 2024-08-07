@@ -639,9 +639,13 @@ namespace EdhDeckBuilder.ViewModel
                     .Union(modelWithUpdatedTags.AllTypes
                     .Select((type) => _cardProvider.GetTagNameForType(type)));
 
-                // Apply roles that have one or more tags in allTags.
                 foreach (var roleWithTags in rolesWithTags)
                 {
+                    if (roleWithTags.Renamed())
+                    {
+                        cardVm.RenameRoleVm(roleWithTags);
+                    }
+
                     if (!roleWithTags.Tags.Any(allTags.Contains)) continue;
 
                     // This role has one or more tags in common with allTags.

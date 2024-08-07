@@ -182,21 +182,21 @@ namespace EdhDeckBuilder.ViewModel
 
         public void ApplyRole(DeckRoleViewModel deckRoleViewModel)
         {
-            if (deckRoleViewModel.Renamed())
-            {
-                var roleVmToRename = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.OriginalName);
-
-                if (roleVmToRename != null)
-                {
-                    roleVmToRename.RenameSilently(deckRoleViewModel.Name);
-                }
-            }
-
             var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
             if (roleVm == null) return;
 
             roleVm.Applies = true;
+        }
+
+        public void RenameRoleVm(DeckRoleViewModel deckRoleViewModel)
+        {
+            var roleVmToRename = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.OriginalName);
+
+            if (roleVmToRename != null)
+            {
+                roleVmToRename.RenameSilently(deckRoleViewModel.Name);
+            }
         }
 
         public override string ToString()
