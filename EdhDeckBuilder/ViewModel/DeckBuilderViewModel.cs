@@ -372,6 +372,10 @@ namespace EdhDeckBuilder.ViewModel
         {
             var deckModel = _deckProvider.LoadDeck(deckPath);
 
+            // TODO: Validate model before resetting and attempting to load cards.
+            Reset();
+            var manifest = deckModel.Cards.Select((c) => c.Name).ToList();
+
             _roleAndTagGroupings = deckModel.RoleAndTagGroupings.Select((grouping) =>
                 new DeckRoleViewModel(grouping)).ToList();
 
@@ -389,16 +393,12 @@ namespace EdhDeckBuilder.ViewModel
                 });
             }
 
-            // TODO: Validate model before attempting to load cards.
-            var manifest = deckModel.Cards.Select((c) => c.Name).ToList();
-
             // TODO: Set loading state here.
             var cardsToAddToUi = await LoadCardsForDeckAsync(deckModel.Cards);
 
             // Update UI.
             if (cardsToAddToUi.Any())
             {
-                Reset();
                 Name = deckModel.Name;
                 foreach (var customRole in deckModel.CustomRoles)
                 {
