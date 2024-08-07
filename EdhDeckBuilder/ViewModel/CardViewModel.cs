@@ -34,6 +34,15 @@ namespace EdhDeckBuilder.ViewModel
 
         public bool ImagesLoaded { get; set; } = false;
 
+        private ObservableCollection<string> _scryfallTags = new ObservableCollection<string>();
+        public ObservableCollection<string> ScryfallTags
+        {
+            get { return _scryfallTags; }
+            set { SetProperty(ref _scryfallTags, value); }
+        }
+
+        public bool HasScryfallTags => ScryfallTags.Any();
+
         private int _numCopies;
         public int NumCopies
         {
@@ -91,6 +100,7 @@ namespace EdhDeckBuilder.ViewModel
             _name = model.Name;
             FrontImage = model.CardImage;
             BackImage = model.BackImage;
+            ScryfallTags = new ObservableCollection<string>(model.ScryfallTags);
             _numCopies = model.NumCopies > 0 ? model.NumCopies : 1;
             _roleVms = new ObservableCollection<RoleViewModel>();
 
@@ -140,6 +150,12 @@ namespace EdhDeckBuilder.ViewModel
                 roleVm.UpdateValueSilently(1);
                 roleVm.ApplySilently();
             }
+        }
+
+        public void UpdateScryfallTags(List<string> newTags)
+        {
+            ScryfallTags = new ObservableCollection<string>(newTags);
+            RaisePropertyChanged(nameof(HasScryfallTags));
         }
 
         private void CreateDefaultRoleVms()

@@ -632,6 +632,9 @@ namespace EdhDeckBuilder.ViewModel
                 // Get card model with updated Scryfall tags.
                 var modelWithUpdatedTags = await _cardProvider.TryGetCardModelAsync(cardVm.Name, cts);
 
+                // Update card vm's Scryfall tags.
+                cardVm.UpdateScryfallTags(modelWithUpdatedTags.ScryfallTags);
+
                 var allTags = modelWithUpdatedTags.ScryfallTags
                     .Union(modelWithUpdatedTags.AllTypes
                     .Select((type) => _cardProvider.GetTagNameForType(type)));
