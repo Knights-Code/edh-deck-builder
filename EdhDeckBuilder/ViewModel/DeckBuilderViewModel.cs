@@ -195,6 +195,8 @@ namespace EdhDeckBuilder.ViewModel
             var cts = new CancellationTokenSource();
             var cardModel = await _cardProvider.TryGetCardModelAsync(cardName, cts);
 
+            if (cardModel == null) return false;
+
             // Load roles from role DB.
             var cardRoles = _roleProvider.GetRolesForCard(cardModel.Name);
 
