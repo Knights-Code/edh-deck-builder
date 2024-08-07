@@ -172,7 +172,7 @@ namespace EdhDeckBuilder.ViewModel
 
                 if (roleVmToRename != null)
                 {
-                    roleVmToRename.Name = deckRoleViewModel.Name;
+                    roleVmToRename.RenameSilently(deckRoleViewModel.Name);
                 }
             }
 

@@ -58,5 +58,10 @@ namespace EdhDeckBuilder.ViewModel
         {
             _value = value;
         }
+
+        public void RenameSilently(string newName)
+        {
+            _name = newName;
+        }
     }
 }
