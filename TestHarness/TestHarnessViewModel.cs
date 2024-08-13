@@ -71,7 +71,8 @@ namespace TestHarness
         {
             get
             {
-                return $"Test Harness - {Path.GetFileName(SettingsProvider.DeckFilePath())}"; 
+                var fileName = Path.GetFileName(SettingsProvider.DeckFilePath());
+                return string.IsNullOrEmpty(fileName) ? "Test Harness" : $"Test Harness - {fileName}";
             }
         }
 
@@ -122,7 +123,7 @@ namespace TestHarness
             SortCardsCommand = new DelegateCommand(SortCards, () => DeckBuilderVm.CardVms.Any());
             SortByRoleCommand = new DelegateCommand(SortCardsByRoleRanking);
             CleanUpCommand = new DelegateCommand(CleanUp, () => DeckBuilderVm.CardVms.Any());
-            DecklistDiffCommand = new DelegateCommand(DecklistDiff, () => DeckBuilderVm.CardVms.Any());
+            DecklistDiffCommand = new DelegateCommand(DecklistDiff);
             DecklistDiffFromFileCommand = new DelegateCommand(DecklistDiffFromFile);
             RoleRankingsCommand = new DelegateCommand(RoleRankings);
 
@@ -140,6 +141,7 @@ namespace TestHarness
         public void NewDeck()
         {
             DeckBuilderVm.NewDeck();
+            RaisePropertyChanged(nameof(WindowTitle));
         }
 
         public void SaveDeck()
@@ -154,9 +156,9 @@ namespace TestHarness
             RaisePropertyChanged(nameof(WindowTitle));
         }
 
-        public void AddNewCard()
+        public async void AddNewCard()
         {
-            var addSuccessful = Task.Run(() => DeckBuilderVm.AddCardAsync(NewCardName)).Result;
+            var addSuccessful = await DeckBuilderVm.AddCardAsync(NewCardName);
             if (addSuccessful) NewCardName = string.Empty;
         }
 

@@ -1,5 +1,6 @@
 ﻿using EdhDeckBuilder.Model;
 using EdhDeckBuilder.Service;
+using EdhDeckBuilder.Service.Clipboard;
 using EdhDeckBuilder.ViewModel;
 using Microsoft.Practices.Prism.Commands;
 using System;
@@ -57,15 +58,33 @@ namespace EdhDeckBuilder.Tests.ViewModel
         }
 
         private DeckModel _deckBuilderDeck;
+        private IClipboard _clipboard;
 
         public ICommand DiffCommand { get; set; }
+        public ICommand CopyAddsToClipboardCommand { get; set; }
 
-        public DecklistDiffViewModel(string title, DeckModel deckBuilderDeck)
+        public DecklistDiffViewModel(string title, DeckModel deckBuilderDeck, IClipboard clipboard)
         {
             Title = title;
             _deckBuilderDeck = deckBuilderDeck;
+            _clipboard = clipboard;
 
             DiffCommand = new DelegateCommand(Diff);
+            CopyAddsToClipboardCommand = new DelegateCommand(CopyAddsToClipboard);
+        }
+
+        public void CopyAddsToClipboard()
+        {
+            if (!CardsToAdd.Any()) return;
+
+            var cardList = string.Empty;
+
+            foreach (var cardToAdd in CardsToAdd)
+            {
+                cardList += $"{cardToAdd.Substring(1)}\n";
+            }
+
+            _clipboard.SetClipboardText(cardList);
         }
 
         public void Diff()

@@ -16,7 +16,7 @@ namespace EdhDeckBuilder.Tests.ViewModel
         {
             var deckModel = new DeckModel("Untitled");
             deckModel.AddCards(new List<CardModel> { new CardModel { Name = "Forest", NumCopies = 1 } });
-            var diffDeckVm = new DecklistDiffViewModel("", deckModel);
+            var diffDeckVm = new DecklistDiffViewModel("", deckModel, null);
             diffDeckVm.DiffDeck = "2 Forest";
 
             diffDeckVm.Diff();
@@ -33,7 +33,7 @@ namespace EdhDeckBuilder.Tests.ViewModel
                     new CardModel { Name = "Forest", NumCopies = 2 },
                     new CardModel { Name = "Ghalta, Stampede Tyrant", NumCopies = 1 }
                 });
-            var diffDeckVm = new DecklistDiffViewModel("", deckModel);
+            var diffDeckVm = new DecklistDiffViewModel("", deckModel, null);
             diffDeckVm.DiffDeck = "1 Forest";
 
             diffDeckVm.Diff();

@@ -541,8 +541,13 @@ namespace EdhDeckBuilder.ViewModel
 
         public void DecklistDiff()
         {
+            if (!CardVms.Any()) return;
+
             var decklistDiffWindow = new DecklistDiffWindow();
-            var decklistDiffVm = new DecklistDiffViewModel($"Decklist Diff for {Name}", ToModel());
+            var decklistDiffVm = new DecklistDiffViewModel(
+                $"Decklist Diff for {Name}",
+                ToModel(),
+                _clipboard);
 
             decklistDiffWindow.DataContext = decklistDiffVm;
             decklistDiffWindow.Show();
@@ -565,7 +570,10 @@ namespace EdhDeckBuilder.ViewModel
 
                     // Create decklist diff vm and set diff deck to deck string from file.
                     var decklistDiffWindow = new DecklistDiffWindow();
-                    var decklistDiffVm = new DecklistDiffViewModel($"Decklist Diff for {Name}", ToModel());
+                    var decklistDiffVm = new DecklistDiffViewModel(
+                        $"Decklist Diff for {Name}",
+                        ToModel(),
+                        _clipboard);
 
                     decklistDiffWindow.DataContext = decklistDiffVm;
                     decklistDiffVm.DiffDeck = UtilityFunctions.CardsToClipboardFormat(diffDeck.Cards);
