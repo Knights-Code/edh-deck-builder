@@ -7,6 +7,14 @@ using System.Threading.Tasks;
 
 namespace EdhDeckBuilder.ViewModel
 {
+    public enum AppliedBySource
+    {
+        NotApplied,
+        User,
+        RoleDb,
+        ScryfallTag,
+    }
+
     public class RoleViewModel : ViewModelBase
     {
         private string _name;
@@ -35,6 +43,7 @@ namespace EdhDeckBuilder.ViewModel
             _name = model.Name;
             _applies = model.Applies;
             _value = model.Value;
+            AppliedBySource = AppliedBySource.NotApplied;
         }
 
         public RoleViewModel(string name)
@@ -42,11 +51,19 @@ namespace EdhDeckBuilder.ViewModel
             _name = name;
             _applies = false;
             _value = 1;
+            AppliedBySource = AppliedBySource.NotApplied;
         }
 
-        public void ApplySilently()
+        public void ApplySilently(AppliedBySource source)
         {
             _applies = true;
+            AppliedBySource = source;
+        }
+
+        public void UnapplySilently(AppliedBySource source)
+        {
+            _applies = false;
+            AppliedBySource = source;
         }
 
         public RoleModel ToModel()
@@ -63,5 +80,12 @@ namespace EdhDeckBuilder.ViewModel
         {
             _name = newName;
         }
+
+         internal void SetAppliedBySource(AppliedBySource appliedBySource)
+        {
+            AppliedBySource = appliedBySource;
+        }
+
+        public AppliedBySource AppliedBySource { get; private set; }
     }
 }

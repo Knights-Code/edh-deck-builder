@@ -66,7 +66,7 @@ namespace EdhDeckBuilder.Tests.ViewModel
         public void CalculateTotal_WhenOneCardWithTwoCopies_CalculatesTotalCorrectly()
         {
             var deckBuilderVm = new DeckBuilderViewModel();
-            deckBuilderVm.CardVms.Add(new CardViewModel(new EdhDeckBuilder.Model.CardModel
+            deckBuilderVm.CardVms.Add(new CardViewModel(new CardModel
             {
                 Name = "Skullclamp",
                 NumCopies = 2,
@@ -203,6 +203,144 @@ namespace EdhDeckBuilder.Tests.ViewModel
 
             var foragers = deckBuilderVm.CardVms.First();
             Assert.AreEqual(deckBuilderVm.TemplateVms.Count, foragers.RoleVms.Count);
+        }
+
+        [Test]
+        public async Task UpdateRolesWithTags_WhenRoleWasLastSetByUser_DoesNotUpdateRole()
+        {
+            var deckBuilderVm = new DeckBuilderViewModel();
+            await Task.Run(() => deckBuilderVm.AddCardAsync("Path to Exile"));
+
+            var cardVm = deckBuilderVm.CardVms.First();
+            var roleVm = cardVm.RoleVms.First(rVm => rVm.Name == "Ramp");
+            roleVm.Applies = false;
+            roleVm.SetAppliedBySource(AppliedBySource.User);
+
+            deckBuilderVm.CardVms = new System.Collections.ObjectModel.ObservableCollection<CardViewModel>
+            {
+                cardVm
+            };
+
+            var roleWithTagsModel = new DeckRoleTagModel
+            {
+                RoleName = "Ramp",
+                Tags = new List<string> { "ramp" }
+            };
+
+            var rolesWithTags = new List<DeckRoleViewModel>
+            {
+                new DeckRoleViewModel(roleWithTagsModel)
+            };
+
+            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(rolesWithTags, new System.Threading.CancellationTokenSource()));
+
+            Assert.False(roleVm.Applies);
+            Assert.AreEqual(AppliedBySource.User, roleVm.AppliedBySource);
+        }
+
+        [Test]
+        public async Task UpdateRolesWithTags_WhenRoleWasLastSetByRoleDb_DoesNotUpdateRole()
+        {
+            var deckBuilderVm = new DeckBuilderViewModel();
+            await Task.Run(() => deckBuilderVm.AddCardAsync("Path to Exile"));
+
+            var cardVm = deckBuilderVm.CardVms.First();
+            var roleVm = cardVm.RoleVms.First(rVm => rVm.Name == "Ramp");
+            roleVm.Applies = false;
+            roleVm.SetAppliedBySource(AppliedBySource.RoleDb);
+
+            deckBuilderVm.CardVms = new System.Collections.ObjectModel.ObservableCollection<CardViewModel>
+            {
+                cardVm
+            };
+
+            var roleWithTagsModel = new DeckRoleTagModel
+            {
+                RoleName = "Ramp",
+                Tags = new List<string> { "ramp" }
+            };
+
+            var rolesWithTags = new List<DeckRoleViewModel>
+            {
+                new DeckRoleViewModel(roleWithTagsModel)
+            };
+
+            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(rolesWithTags, new System.Threading.CancellationTokenSource()));
+
+            Assert.False(roleVm.Applies);
+            Assert.AreEqual(AppliedBySource.RoleDb, roleVm.AppliedBySource);
+        }
+
+        [Test]
+        public async Task UpdateRolesWithTags_WhenRoleWasLastSetByUser_AndOverrideSet_DoesUpdateRole()
+        {
+            var deckBuilderVm = new DeckBuilderViewModel();
+            await Task.Run(() => deckBuilderVm.AddCardAsync("Path to Exile"));
+
+            var cardVm = deckBuilderVm.CardVms.First();
+            var roleVm = cardVm.RoleVms.First(rVm => rVm.Name == "Wipe");
+            roleVm.Applies = true;
+            roleVm.SetAppliedBySource(AppliedBySource.User);
+
+            deckBuilderVm.CardVms = new System.Collections.ObjectModel.ObservableCollection<CardViewModel>
+            {
+                cardVm
+            };
+
+            var roleWithTagsModel = new DeckRoleTagModel
+            {
+                RoleName = "Wipe",
+                Tags = new List<string> { "sweeper" }
+            };
+
+            var rolesWithTags = new List<DeckRoleViewModel>
+            {
+                new DeckRoleViewModel(roleWithTagsModel)
+            };
+
+            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(
+                rolesWithTags,
+                new System.Threading.CancellationTokenSource(),
+                true));
+
+            Assert.False(roleVm.Applies);
+            Assert.AreEqual(AppliedBySource.ScryfallTag, roleVm.AppliedBySource);
+        }
+
+        [Test]
+        public async Task UpdateRolesWithTags_WhenRoleWasLastSetByRoleDb_AndOverrideSet_DoesUpdateRole()
+        {
+            var deckBuilderVm = new DeckBuilderViewModel();
+            await Task.Run(() => deckBuilderVm.AddCardAsync("Path to Exile"));
+
+            var cardVm = deckBuilderVm.CardVms.First();
+            var roleVm = cardVm.RoleVms.First(rVm => rVm.Name == "Wipe");
+            roleVm.Applies = true;
+            roleVm.SetAppliedBySource(AppliedBySource.RoleDb);
+
+            deckBuilderVm.CardVms = new System.Collections.ObjectModel.ObservableCollection<CardViewModel>
+            {
+                cardVm
+            };
+
+            var roleWithTagsModel = new DeckRoleTagModel
+            {
+                RoleName = "Wipe",
+                Tags = new List<string> { "sweeper" }
+            };
+
+            var rolesWithTags = new List<DeckRoleViewModel>
+            {
+                new DeckRoleViewModel(roleWithTagsModel)
+            };
+
+            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(
+                rolesWithTags,
+                new System.Threading.CancellationTokenSource(),
+                true));
+
+            Assert.False(roleVm.Applies);
+            Assert.AreEqual(AppliedBySource.ScryfallTag, roleVm.AppliedBySource);
         }
     }
 }

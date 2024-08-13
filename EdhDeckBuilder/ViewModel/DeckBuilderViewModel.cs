@@ -501,7 +501,7 @@ namespace EdhDeckBuilder.ViewModel
             // Create new role view model for cards.
             foreach (var card in CardVms)
             {
-                card.AddRole(customRoleName);
+                card.AddRoleVm(customRoleName);
             }
 
             // Create grouping for new role.
@@ -615,7 +615,8 @@ namespace EdhDeckBuilder.ViewModel
         /// <param name="cts"></param>
         public async void UpdateRolesWithTags(
             List<DeckRoleViewModel> rolesWithTags,
-            CancellationTokenSource cts)
+            CancellationTokenSource cts,
+            bool overrideExistingRoleValues = false)
         {
             // Update headers if role name changed.
             foreach (var renamedRole in rolesWithTags.Where(roleWithTags => roleWithTags.Renamed()))
@@ -648,11 +649,14 @@ namespace EdhDeckBuilder.ViewModel
                         cardVm.RenameRoleVm(roleWithTags);
                     }
 
-                    if (!roleWithTags.Tags.Any(allTags.Contains)) continue;
+                    var cardHasTagsAssociatedWithRole = roleWithTags.Tags.Any(allTags.Contains);
 
-                    // This role has one or more tags in common with allTags.
-                    // Apply the role.
-                    cardVm.ApplyRole(roleWithTags);
+                    if (!overrideExistingRoleValues && !cardVm.CanUseTagsToUpdateRole(roleWithTags.Name)) continue;
+
+                    // Permitted to update role. Check if role applies or not, and update accordingly.
+                    if (cardHasTagsAssociatedWithRole) cardVm.ApplyRole(roleWithTags, AppliedBySource.ScryfallTag);
+                    else cardVm.UnapplyRole(roleWithTags, AppliedBySource.ScryfallTag);
+
                     UpdateRoleHeaders(cardVm);
                 }
             }

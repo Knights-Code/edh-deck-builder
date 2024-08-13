@@ -16,6 +16,8 @@ namespace EdhDeckBuilder.ViewModel
     {
         public EventHandler RoleUpdated;
 
+        private AppliedBySource _appliedBySourceOverride;
+
         private string _name;
         public string Name
         {
@@ -103,6 +105,7 @@ namespace EdhDeckBuilder.ViewModel
             ScryfallTags = new ObservableCollection<string>(model.ScryfallTags);
             _numCopies = model.NumCopies > 0 ? model.NumCopies : 1;
             _roleVms = new ObservableCollection<RoleViewModel>();
+            _appliedBySourceOverride = AppliedBySource.NotApplied;
 
             CreateDefaultRoleVms();
 
@@ -110,27 +113,40 @@ namespace EdhDeckBuilder.ViewModel
             {
                 foreach (var customRole in customRoles)
                 {
-                    AddRole(customRole);
+                    AddRoleVm(customRole);
                 }
             }
 
-            foreach (var roleModel in model.Roles)
+            if (model.Roles.Any())
             {
-                var roleVm = _roleVms.FirstOrDefault(vm => vm.Name == roleModel.Name);
-
-                if (roleVm == null) continue; // This can happen if the role model is a custom role not used by this deck.
-
-                if (roleRankings != null)
+                // If this card loaded its roles from the role DB,
+                // only the roles that apply will get an applied by source
+                // of "RoleDb". Instead, if any role data was loaded at all,
+                // we can set the source to RoleDb for all role VMs on the
+                // card.
+                foreach (var roleVm in _roleVms)
                 {
-                    var rankingForRole = roleRankings.FirstOrDefault(rr => rr.Name == roleVm.Name);
-                    var roleTagsIncluded = false;
-
-                    if (rankingForRole != null) roleVm.UpdateValueSilently(rankingForRole.Value);
+                    roleVm.SetAppliedBySource(AppliedBySource.RoleDb);
                 }
 
-                if (!roleModel.Applies) continue;
+                foreach (var roleModel in model.Roles)
+                {
+                    var roleVm = _roleVms.FirstOrDefault(vm => vm.Name == roleModel.Name);
 
-                roleVm.ApplySilently();
+                    if (roleVm == null) continue; // This can happen if the role model is a custom role not used by this deck.
+
+                    if (roleRankings != null)
+                    {
+                        var rankingForRole = roleRankings.FirstOrDefault(rr => rr.Name == roleVm.Name);
+                        var roleTagsIncluded = false;
+
+                        if (rankingForRole != null) roleVm.UpdateValueSilently(rankingForRole.Value);
+                    }
+
+                    if (!roleModel.Applies) continue;
+
+                    roleVm.ApplySilently(AppliedBySource.RoleDb);
+                }
             }
 
             if (deckRoleTagModels == null) return;
@@ -148,8 +164,18 @@ namespace EdhDeckBuilder.ViewModel
                 if (roleVm == null) continue;
 
                 roleVm.UpdateValueSilently(1);
-                roleVm.ApplySilently();
+                roleVm.ApplySilently(AppliedBySource.RoleDb);
             }
+        }
+
+        public CardModel ToModel()
+        {
+            return new CardModel
+            {
+                Name = _name,
+                NumCopies = _numCopies,
+                Roles = _roleVms.Select(roleVm => roleVm.ToModel()).ToList(),
+            };
         }
 
         public void UpdateScryfallTags(List<string> newTags)
@@ -162,11 +188,11 @@ namespace EdhDeckBuilder.ViewModel
         {
             foreach (var defaultRole in TemplatesAndDefaults.DefaultRoleSet())
             {
-                AddRole(defaultRole);
+                AddRoleVm(defaultRole);
             }
         }
 
-        public void AddRole(string roleName)
+        public void AddRoleVm(string roleName)
         {
             if (_roleVms.Any(vm => vm.Name == roleName)) return;
             var roleVm = new RoleViewModel(roleName);
@@ -177,16 +203,65 @@ namespace EdhDeckBuilder.ViewModel
 
         private void RoleVm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            var roleVm = sender as RoleViewModel;
+
+            if (e.PropertyName == nameof(roleVm.Applies))
+            {
+                // This property change event is raised by both user interactions
+                // and programmatically when applying Scryfall tags. If
+                // the former, the override will be "NotApplied", and if
+                // the latter, the override will be an actual value.
+                if (_appliedBySourceOverride == AppliedBySource.NotApplied)
+                {
+                    roleVm.SetAppliedBySource(AppliedBySource.User);
+                }
+                else
+                {
+                    roleVm.SetAppliedBySource(_appliedBySourceOverride);
+                    _appliedBySourceOverride = AppliedBySource.NotApplied;
+                }
+            }
+
             RoleUpdated.Invoke(new RoleUpdatedSenders { CardVm = this, RoleVm = sender as RoleViewModel }, e);
         }
 
-        public void ApplyRole(DeckRoleViewModel deckRoleViewModel)
+        public void ApplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
         {
             var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
-            if (roleVm == null) return;
+            if (roleVm == null || roleVm.Applies) return;
 
+            _appliedBySourceOverride = source;
             roleVm.Applies = true;
+        }
+
+        public void UnapplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
+        {
+            var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
+
+            if (roleVm == null || !roleVm.Applies) return;
+
+            _appliedBySourceOverride = source;
+            roleVm.Applies = false;
+        }
+
+        public bool CanUseTagsToUpdateRole(string roleName)
+        {
+            var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == roleName);
+
+            if (roleVm == null) return false;
+
+            switch (roleVm.AppliedBySource)
+            {
+                case AppliedBySource.NotApplied:
+                case AppliedBySource.ScryfallTag:
+                    return true;
+                case AppliedBySource.RoleDb:
+                case AppliedBySource.User:
+                    return false;
+                default:
+                    return true;
+            }
         }
 
         public void RenameRoleVm(DeckRoleViewModel deckRoleViewModel)
@@ -202,16 +277,6 @@ namespace EdhDeckBuilder.ViewModel
         public override string ToString()
         {
             return Name;
-        }
-
-        public CardModel ToModel()
-        {
-            return new CardModel
-            {
-                Name = _name,
-                NumCopies = _numCopies,
-                Roles = _roleVms.Select(roleVm => roleVm.ToModel()).ToList(),
-            };
         }
     }
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace EdhDeckBuilder.ViewModel
@@ -110,6 +111,13 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _deckRoles, value); }
         }
 
+        private bool _overrideExistingData;
+        public bool OverrideExistingData
+        {
+            get { return _overrideExistingData; }
+            set { SetProperty(ref _overrideExistingData, value); }
+        }
+
         public ICommand RetrieveCommand { get; set; }
         public ICommand ResetFilterCommand { get; set; }
         public ICommand RemoveTagFromRoleCommand { get; set; }
@@ -151,8 +159,23 @@ namespace EdhDeckBuilder.ViewModel
 
         public void UpdateRolesInDeck()
         {
+            if (OverrideExistingData)
+            {
+                if (MessageBox.Show(
+                    "The box to override existing data is checked.\n" +
+                    "This will overwrite all role data " +
+                    "entirely.\n\n" +
+                    "Are you sure you want to continue?",
+                    "Data Override Warning",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning) == MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+
             _deckBuilderVm.UpdateRolesWithTags(DeckRoleVms.ToList(),
-                new CancellationTokenSource());
+                new CancellationTokenSource(), OverrideExistingData);
         }
 
         public void AddTagToRole()
