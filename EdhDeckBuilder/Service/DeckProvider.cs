@@ -291,6 +291,9 @@ namespace EdhDeckBuilder.Service
                     result.CustomRoles.Add(item);
                 }
 
+                var allRoles = defaultRoleSet;
+                allRoles.AddRange(result.CustomRoles);
+
                 // Now read cards.
                 var cards = new List<CardModel>();
 
@@ -305,9 +308,6 @@ namespace EdhDeckBuilder.Service
                     var newCard = new CardModel { Name = name, NumCopies = intNumCopies };
 
                     // Read role rankings, if any.
-                    var allRoles = defaultRoleSet;
-                    allRoles.AddRange(result.CustomRoles);
-
                     for (int i = 2; i < allRoles.Count + 2; i++)
                     {
                         try
