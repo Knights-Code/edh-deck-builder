@@ -99,7 +99,7 @@ namespace EdhDeckBuilder.ViewModel
             {
                 if (SetProperty(ref _filterInput, value))
                 {
-                    StartOrRestartFilter(value);
+                    StartOrRestartFilterTags(value);
                 }
             }
         }
@@ -118,18 +118,90 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _overrideExistingData, value); }
         }
 
+        private string _filterCardsInput;
+        public string FilterCardsInput
+        {
+            get { return _filterCardsInput; }
+            set
+            {
+                if (SetProperty(ref _filterCardsInput, value))
+                {
+                    StartOrRestartFilterCards(value);
+                    RaiseCanExecuteChanged(ResetCardsFilterCommand);
+                }
+            }
+        }
+
+        private bool _shouldFilterCardsByTag;
+        public bool ShouldFilterCardsByTag
+        {
+            get { return _shouldFilterCardsByTag; }
+            set { SetProperty(ref _shouldFilterCardsByTag, value); }
+        }
+
+        private ObservableCollection<string> _cardsToIgnore;
+        public ObservableCollection<string> CardsToIgnore
+        {
+            get { return _cardsToIgnore; }
+            set { SetProperty(ref _cardsToIgnore, value); }
+        }
+
+        private string _selectedIgnoreCard;
+        public string SelectedIgnoreCard
+        {
+            get { return _selectedIgnoreCard; }
+            set { SetProperty(ref _selectedIgnoreCard, value); }
+        }
+
+        private int _selectedIgnoreIndex;
+        public int SelectedIgnoreIndex
+        {
+            get { return _selectedIgnoreIndex; }
+            set { SetProperty(ref _selectedIgnoreIndex, value); }
+        }
+
+        private ObservableCollection<string> _cardsToUpdate;
+        public ObservableCollection<string> CardsToUpdate
+        {
+            get { return _cardsToUpdate; }
+            set { SetProperty(ref _cardsToUpdate, value); }
+        }
+
+        private string _selectedUpdateCard;
+        public string SelectedUpdateCard
+        {
+            get { return _selectedUpdateCard; }
+            set { SetProperty(ref _selectedUpdateCard, value); }
+        }
+
+        private int _selectedUpdateIndex;
+        public int SelectedUpdateIndex
+        {
+            get { return _selectedUpdateIndex; }
+            set { SetProperty(ref _selectedUpdateIndex, value); }
+        }
+
         public ICommand RetrieveCommand { get; set; }
         public ICommand ResetFilterCommand { get; set; }
         public ICommand RemoveTagFromRoleCommand { get; set; }
         public ICommand AddTagToRoleCommand { get; set; }
         public ICommand UpdateRolesInDeckCommand { get; set; }
+        public ICommand ResetCardsFilterCommand { get; set; }
+        public ICommand MoveSelectedFromIgnoreToUpdateCommand { get; set; }
+        public ICommand MoveAllFromIgnoreToUpdateCommand { get; set; }
+        public ICommand MoveAllFromUpdateToIgnoreCommand { get; set; }
+        public ICommand MoveSelectedFromUpdateToIgnoreCommand { get; set; }
 
         private List<TagSummaryViewModel> _fullTagsList;
+        private List<string> _fullIgnoreList;
+        private List<string> _fullUpdateList;
         private readonly DeckModel _deck;
         private readonly CardProvider _cardProvider;
         private readonly DeckBuilderViewModel _deckBuilderVm;
-        private Task _filterTask;
-        private CancellationTokenSource _filterCancel;
+        private Task _filterTagsTask;
+        private CancellationTokenSource _filterTagsCancel;
+        private Task _filterCardsTask;
+        private CancellationTokenSource _filterCardsCancel;
 
         public TagManagerViewModel(
             string title,
@@ -144,21 +216,52 @@ namespace EdhDeckBuilder.ViewModel
             _cardProvider = cardProvider;
             _deckBuilderVm = deckBuilderVm;
             _fullTagsList = new List<TagSummaryViewModel>();
+            _fullIgnoreList = new List<string>();
+            _fullUpdateList = new List<string>();
             TagSummaryVms = new ObservableCollection<TagSummaryViewModel>();
-            _filterCancel = new CancellationTokenSource();
+            _filterTagsCancel = new CancellationTokenSource();
+            _filterCardsCancel = new CancellationTokenSource();
 
             RetrieveCommand = new DelegateCommand(async () => await Retrieve());
             ResetFilterCommand = new DelegateCommand(ResetFilter);
             AddTagToRoleCommand = new DelegateCommand(AddTagToRole);
             RemoveTagFromRoleCommand = new DelegateCommand(RemoveTagFromRole);
             UpdateRolesInDeckCommand = new DelegateCommand(UpdateRolesInDeck);
+            ResetCardsFilterCommand = new DelegateCommand(ResetCardsFilter,
+                () => !string.IsNullOrEmpty(FilterCardsInput));
+            MoveSelectedFromIgnoreToUpdateCommand = new DelegateCommand(MoveSelectedToUpdate,
+                () => !string.IsNullOrEmpty(SelectedIgnoreCard));
+            MoveSelectedFromUpdateToIgnoreCommand = new DelegateCommand(MoveSelectedToIgnore,
+                () => !string.IsNullOrEmpty(SelectedUpdateCard));
+            MoveAllFromIgnoreToUpdateCommand = new DelegateCommand(MoveAllToUpdate,
+                () => CardsToIgnore.Any());
+            MoveAllFromUpdateToIgnoreCommand = new DelegateCommand(MoveAllToIgnore,
+                () => CardsToUpdate.Any());
 
             DeckRoleVms = new ObservableCollection<DeckRoleViewModel>(
                 deck.RoleAndTagGroupings.Select(gModel => new DeckRoleViewModel(gModel)));
+            CardsToUpdate = new ObservableCollection<string>(_deckBuilderVm.CardVms
+                .Select(c => c.Name)
+                .OrderBy(name => name));
+            _fullUpdateList = CardsToUpdate.ToList();
+            CardsToIgnore = new ObservableCollection<string>();
         }
 
-        public void UpdateRolesInDeck()
+        public async void UpdateRolesInDeck()
         {
+            if (!_fullUpdateList.Any())
+            {
+                MessageBox.Show(
+                    "The list of cards to update is empty. Please move one or more\n" +
+                    "cards to the update list and try again.",
+                    "Empty Update List",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                {
+                    return;
+                }
+            }
+
             if (OverrideExistingData)
             {
                 if (MessageBox.Show(
@@ -174,8 +277,27 @@ namespace EdhDeckBuilder.ViewModel
                 }
             }
 
-            _deckBuilderVm.UpdateRolesWithTags(DeckRoleVms.ToList(),
-                new CancellationTokenSource(), OverrideExistingData);
+            if (!string.IsNullOrEmpty(FilterCardsInput))
+            {
+                if (MessageBox.Show(
+                    "There is an active filter on the card lists, hiding some cards\n" +
+                    "in the lists of cards to ignore and update.\n\n" +
+                    "These hidden cards will still be updated.\n\n" +
+                    "Are you sure you want to continue?",
+                    "Active Filter Warning",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning) == MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+
+            Status = "Updating tags and roles...";
+
+            var status = await _deckBuilderVm.UpdateRolesWithTags(DeckRoleVms.ToList(),
+            _fullUpdateList, new CancellationTokenSource(), OverrideExistingData);
+
+            Status = status;
         }
 
         public void AddTagToRole()
@@ -199,20 +321,271 @@ namespace EdhDeckBuilder.ViewModel
             FilterInput = string.Empty;
         }
 
-        public async void StartOrRestartFilter(string filterText)
+        public void ResetCardsFilter()
         {
-            if (_filterTask != null && !_filterTask.IsCompleted)
-            {
-                _filterCancel.Cancel();
-                await _filterTask;
-            }
-
-            _filterCancel = new CancellationTokenSource();
-            _filterTask = FilterAsync(filterText, _filterCancel);
-            await _filterTask;
+            FilterCardsInput = string.Empty;
         }
 
-        public async Task FilterAsync(string filterText, CancellationTokenSource cts)
+        public enum ListMoveDirection
+        {
+            ToIgnore,
+            ToUpdate,
+        }
+
+        public void ConductHousekeepingForIgnoreListAndUpdateList(
+            ListMoveDirection listMoveDirection,
+            List<string> movedCards)
+        {
+            if (!movedCards.Any()) return;
+
+            // Full lists are maintained independently from the UI
+            // to facilitate functional filtering.
+            List<string> fromList = listMoveDirection == ListMoveDirection.ToIgnore
+                ? _fullUpdateList
+                : _fullIgnoreList;
+            List<string> toList = listMoveDirection == ListMoveDirection.ToIgnore
+                ? _fullIgnoreList
+                : _fullUpdateList;
+
+            foreach (var cardName in movedCards)
+            {
+                toList.Add(cardName);
+                fromList.Remove(cardName);
+            }
+
+            RaiseCanExecuteChanged(MoveAllFromIgnoreToUpdateCommand);
+            RaiseCanExecuteChanged(MoveAllFromUpdateToIgnoreCommand);
+            RaiseCanExecuteChanged(MoveSelectedFromIgnoreToUpdateCommand);
+            RaiseCanExecuteChanged(MoveSelectedFromUpdateToIgnoreCommand);
+        }
+
+        public void MoveSelectedToUpdate()
+        {
+            if (string.IsNullOrEmpty(SelectedIgnoreCard))
+            {
+                return;
+            }
+
+            var currentSelectedIndex = SelectedIgnoreIndex;
+            var nameOfCardToMove = SelectedIgnoreCard;
+            var cardsToUpdateWasEmpty = !CardsToUpdate.Any();
+
+            CardsToUpdate.Add(nameOfCardToMove);
+            CardsToIgnore.Remove(nameOfCardToMove);
+
+            if (CardsToIgnore.Any())
+            {
+                SelectedIgnoreIndex = Math.Min(currentSelectedIndex, CardsToIgnore.Count - 1);
+            }
+
+            if (cardsToUpdateWasEmpty) SelectedUpdateIndex = 0;
+
+            SelectUpdateCard(nameOfCardToMove);
+
+            ConductHousekeepingForIgnoreListAndUpdateList(
+                ListMoveDirection.ToUpdate,
+                new List<string> { nameOfCardToMove });
+        }
+
+        public void MoveAllToUpdate()
+        {
+            var movedCards = new List<string>();
+
+            while (CardsToIgnore.Any())
+            {
+                var ignoreCard = CardsToIgnore.First();
+                CardsToUpdate.Add(ignoreCard);
+                CardsToIgnore.Remove(ignoreCard);
+                movedCards.Add(ignoreCard);
+            }
+
+            ConductHousekeepingForIgnoreListAndUpdateList(ListMoveDirection.ToUpdate, movedCards);
+        }
+
+        public void MoveAllToIgnore()
+        {
+            var movedCards = new List<string>();
+
+            while (CardsToUpdate.Any())
+            {
+                var updateCard = CardsToUpdate.First();
+                CardsToIgnore.Add(updateCard);
+                CardsToUpdate.Remove(updateCard);
+                movedCards.Add(updateCard);
+            }
+
+            ConductHousekeepingForIgnoreListAndUpdateList(ListMoveDirection.ToIgnore, movedCards);
+        }
+
+        public void MoveSelectedToIgnore()
+        {
+            if (string.IsNullOrEmpty(SelectedUpdateCard))
+            {
+                return;
+            }
+
+            var currentSelectedIndex = SelectedUpdateIndex;
+            var nameOfCardToMove = SelectedUpdateCard;
+            var cardsToIgnoreWasEmpty = !CardsToIgnore.Any();
+
+            CardsToIgnore.Add(nameOfCardToMove);
+            CardsToUpdate.Remove(nameOfCardToMove);
+
+            if (CardsToUpdate.Any())
+            {
+                SelectedUpdateIndex = Math.Min(currentSelectedIndex, CardsToUpdate.Count - 1);
+            }
+
+            if (cardsToIgnoreWasEmpty) SelectedIgnoreIndex = 0;
+
+            SelectIgnoreCard(nameOfCardToMove);
+
+            ConductHousekeepingForIgnoreListAndUpdateList(
+                ListMoveDirection.ToIgnore,
+                new List<string> { nameOfCardToMove });
+        }
+
+        public void SelectUpdateCard(string cardName)
+        {
+            if (!CardsToUpdate.Contains(cardName)) return;
+
+            SelectedUpdateCard = cardName;
+        }
+
+        public void SelectIgnoreCard(string cardName)
+        {
+            if (!CardsToIgnore.Contains(cardName)) return;
+
+            SelectedIgnoreCard = cardName;
+        }
+
+        public async void StartOrRestartFilterCards(string filterText)
+        {
+            if (_filterCardsTask != null && !_filterCardsTask.IsCompleted)
+            {
+                _filterCardsCancel.Cancel();
+                await _filterCardsTask;
+            }
+
+            _filterCardsCancel = new CancellationTokenSource();
+            _filterCardsTask = FilterCardsAsync(filterText, ShouldFilterCardsByTag, _filterCardsCancel);
+            await _filterCardsTask;
+        }
+
+        /// <summary>
+        /// Filters both cards to ignore and cards to update lists
+        /// based on provided filter text and checkbox value.
+        /// </summary>
+        /// <param name="filterText">The search term.</param>
+        /// <param name="shouldFilterByTags">If true, filters by tags on card instead of card's name.</param>
+        /// <param name="cancellationTokenSource"></param>
+        /// <returns>An awaitable Task for the function.</returns>
+        public async Task FilterCardsAsync(
+            string filterText,
+            bool shouldFilterByTags,
+            CancellationTokenSource cancellationTokenSource)
+        {
+            if (shouldFilterByTags &&
+                !_deckBuilderVm.CardVms.Any((cardVm) => cardVm.HasScryfallTags))
+            {
+                // User has opted to filter by tags, but none
+                // of the cards have tags yet.
+                MessageBox.Show("None of the cards in the deck have any Scryfall tags to\n" +
+                    "filter on. Retrieve tags and update roles, then try again.",
+                    "No Tags Available",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            var filteredIgnoreList = new List<string>();
+            var filteredUpdateList = new List<string>();
+
+            await Task.Run(() =>
+            {
+                if (!shouldFilterByTags)
+                {
+                    filteredIgnoreList = _fullIgnoreList
+                        .Where(cardName => cardName.ToLower().Contains(filterText.ToLower()))
+                        .ToList();
+                    filteredUpdateList = _fullUpdateList
+                        .Where(cardName => cardName.ToLower().Contains(filterText.ToLower()))
+                        .ToList();
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(FilterCardsInput))
+                    {
+                        // If the filter field is empty, simply reset
+                        // the lists to full.
+                        filteredIgnoreList = _fullIgnoreList;
+                        filteredUpdateList = _fullUpdateList;
+                    }
+                    else
+                    {
+                        // For each card in each list, check if it has any tags that match the
+                        // filter text.
+                        foreach (var cardName in _fullIgnoreList)
+                        {
+                            if (cancellationTokenSource.IsCancellationRequested)
+                            {
+                                return;
+                            }
+
+                            var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
+
+                            if (!cardVm.AllTags.Any()) continue;
+
+                            if (cardVm.AllTags.Any(tag => tag.ToLower() == filterText.ToLower()))
+                                filteredIgnoreList.Add(cardName);
+                        }
+
+                        if (cancellationTokenSource.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
+                        foreach (var cardName in _fullUpdateList)
+                        {
+                            if (cancellationTokenSource.IsCancellationRequested)
+                            {
+                                return;
+                            }
+
+                            var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
+
+                            if (!cardVm.AllTags.Any()) continue;
+
+                            if (cardVm.AllTags.Any(tag => tag.ToLower() == filterText.ToLower()))
+                                filteredUpdateList.Add(cardName);
+                        }
+                    }
+                }
+            });
+
+            if (cancellationTokenSource.IsCancellationRequested)
+            {
+                return;
+            }
+
+            CardsToIgnore = new ObservableCollection<string>(filteredIgnoreList);
+            CardsToUpdate = new ObservableCollection<string>(filteredUpdateList);
+        }
+
+        public async void StartOrRestartFilterTags(string filterText)
+        {
+            if (_filterTagsTask != null && !_filterTagsTask.IsCompleted)
+            {
+                _filterTagsCancel.Cancel();
+                await _filterTagsTask;
+            }
+
+            _filterTagsCancel = new CancellationTokenSource();
+            _filterTagsTask = FilterTagsAsync(filterText, _filterTagsCancel);
+            await _filterTagsTask;
+        }
+
+        public async Task FilterTagsAsync(string filterText, CancellationTokenSource cts)
         {
             var filteredList = new List<TagSummaryViewModel>();
 

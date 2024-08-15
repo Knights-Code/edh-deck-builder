@@ -613,12 +613,16 @@ namespace EdhDeckBuilder.ViewModel
         /// </summary>
         /// <param name="rolesWithTags"></param>
         /// <param name="cts"></param>
-        public async void UpdateRolesWithTags(
+        public async Task<string> UpdateRolesWithTags(
             List<DeckRoleViewModel> rolesWithTags,
+            List<string> cardsToUpdate,
             CancellationTokenSource cts,
             bool overrideExistingRoleValues = false)
         {
+            var statusReport = string.Empty;
+
             // Update headers if role name changed.
+            var renamedRoleCount = 0;
             foreach (var renamedRole in rolesWithTags.Where(roleWithTags => roleWithTags.Renamed()))
             {
                 var headerToUpdate = TemplateVms
@@ -627,11 +631,18 @@ namespace EdhDeckBuilder.ViewModel
                 if (headerToUpdate != null)
                 {
                     headerToUpdate.Role = renamedRole.Name;
+                    renamedRoleCount++;
                 }
             }
 
+            if (renamedRoleCount > 0) statusReport += $"Renamed {renamedRoleCount} role(s). ";
+
+            var updatedCardCount = 0;
+            var updatedRoleCount = 0;
             foreach (var cardVm in CardVms)
             {
+                if (!cardsToUpdate.Contains(cardVm.Name)) continue;
+
                 // Get card model with updated Scryfall tags.
                 var modelWithUpdatedTags = await _cardProvider.TryGetCardModelAsync(cardVm.Name, cts);
 
@@ -641,6 +652,8 @@ namespace EdhDeckBuilder.ViewModel
                 var allTags = modelWithUpdatedTags.ScryfallTags
                     .Union(modelWithUpdatedTags.AllTypes
                     .Select((type) => _cardProvider.GetTagNameForType(type)));
+
+                updatedCardCount++;
 
                 foreach (var roleWithTags in rolesWithTags)
                 {
@@ -658,10 +671,23 @@ namespace EdhDeckBuilder.ViewModel
                     else cardVm.UnapplyRole(roleWithTags, AppliedBySource.ScryfallTag);
 
                     UpdateRoleHeaders(cardVm);
+
+                    updatedRoleCount++;
+                }
+            }
+
+            if (updatedCardCount > 0)
+            {
+                statusReport += $"Updated Scryfall tags for {updatedCardCount} card(s). ";
+
+                if (updatedRoleCount > 0)
+                {
+                    statusReport += $"Updated {updatedRoleCount} role values across all cards.";
                 }
             }
 
             _roleAndTagGroupings = rolesWithTags;
+            return $"Update successful. {statusReport}";
         }
 
         public void DecklistDiff()

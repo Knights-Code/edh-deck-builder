@@ -232,7 +232,10 @@ namespace EdhDeckBuilder.Tests.ViewModel
                 new DeckRoleViewModel(roleWithTagsModel)
             };
 
-            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(rolesWithTags, new System.Threading.CancellationTokenSource()));
+            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(
+                rolesWithTags,
+                deckBuilderVm.CardVms.Select(c => c.Name).ToList(),
+                new System.Threading.CancellationTokenSource()));
 
             Assert.False(roleVm.Applies);
             Assert.AreEqual(AppliedBySource.User, roleVm.AppliedBySource);
@@ -265,7 +268,10 @@ namespace EdhDeckBuilder.Tests.ViewModel
                 new DeckRoleViewModel(roleWithTagsModel)
             };
 
-            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(rolesWithTags, new System.Threading.CancellationTokenSource()));
+            await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(
+                rolesWithTags,
+                deckBuilderVm.CardVms.Select(c => c.Name).ToList(),
+                new System.Threading.CancellationTokenSource()));
 
             Assert.False(roleVm.Applies);
             Assert.AreEqual(AppliedBySource.RoleDb, roleVm.AppliedBySource);
@@ -300,6 +306,7 @@ namespace EdhDeckBuilder.Tests.ViewModel
 
             await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(
                 rolesWithTags,
+                deckBuilderVm.CardVms.Select(c => c.Name).ToList(),
                 new System.Threading.CancellationTokenSource(),
                 true));
 
@@ -336,6 +343,7 @@ namespace EdhDeckBuilder.Tests.ViewModel
 
             await Task.Run(() => deckBuilderVm.UpdateRolesWithTags(
                 rolesWithTags,
+                deckBuilderVm.CardVms.Select(c => c.Name).ToList(),
                 new System.Threading.CancellationTokenSource(),
                 true));
 

@@ -45,6 +45,10 @@ namespace EdhDeckBuilder.ViewModel
 
         public bool HasScryfallTags => ScryfallTags.Any();
 
+        private List<string> _allTypes = new List<string>();
+
+        public IEnumerable<string> AllTags => _allTypes.Union(_scryfallTags.ToList());
+
         private int _numCopies;
         public int NumCopies
         {
@@ -103,6 +107,7 @@ namespace EdhDeckBuilder.ViewModel
             FrontImage = model.CardImage;
             BackImage = model.BackImage;
             ScryfallTags = new ObservableCollection<string>(model.ScryfallTags);
+            _allTypes = model.AllTypes;
             _numCopies = model.NumCopies > 0 ? model.NumCopies : 1;
             _roleVms = new ObservableCollection<RoleViewModel>();
             _appliedBySourceOverride = AppliedBySource.NotApplied;
