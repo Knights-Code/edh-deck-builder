@@ -21,7 +21,7 @@
             Retrieve Scryfall tags and counts for deck
         </Button>
         <ScrollViewer Grid.Row="1" Margin="10, 0, 10, 10">
-            <TextBlock Text="{Binding Errors}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Log}" TextWrapping="Wrap" />
         </ScrollViewer>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>

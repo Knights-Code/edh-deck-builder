@@ -183,7 +183,7 @@ namespace EdhDeckBuilder.ViewModel
             };
         }
 
-        public bool UpdateScryfallTags(List<string> newTags)
+        public bool UpdateScryfallTags(List<string> newTags, RolesAndTagsReport statusReport = null)
         {
             if (newTags.All(ScryfallTags.Contains) &&
                 ScryfallTags.All(newTags.Contains))
@@ -192,9 +192,39 @@ namespace EdhDeckBuilder.ViewModel
                 return false;
             }
 
+            if (statusReport != null)
+            {
+                // Update status report, if one is provided.
+                statusReport.AddScryfallTagsUpdateEvent(
+                    BuildScryfallTagsUpdateEvent(newTags));
+            }
+
             ScryfallTags = new ObservableCollection<string>(newTags);
             RaisePropertyChanged(nameof(HasScryfallTags));
             return true;
+        }
+
+        private string BuildScryfallTagsUpdateEvent(List<string> newTags)
+        {
+            var addedTags = newTags.Except(ScryfallTags);
+            var removedTags = ScryfallTags.Except(newTags);
+
+            if (!addedTags.Any() && !removedTags.Any())
+            {
+                // Should probably throw an exception here, because this
+                // should only be called when newTags is different to
+                // ScryfallTags in some way.
+                return string.Empty;
+            }
+
+            var addedMessage = addedTags.Any()
+                ? $"Added {string.Join(", ", addedTags)} tag(s) to {Name}."
+                : string.Empty;
+            var removedMessage = removedTags.Any()
+                ? $"Removed {string.Join(", ", removedTags)} tag(s) from {Name}."
+                : string.Empty;
+
+            return string.Join(" ", new[] { addedMessage, removedMessage });
         }
 
         private void CreateDefaultRoleVms()
@@ -238,7 +268,10 @@ namespace EdhDeckBuilder.ViewModel
             RoleUpdated.Invoke(new RoleUpdatedSenders { CardVm = this, RoleVm = sender as RoleViewModel }, e);
         }
 
-        public bool ApplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
+        public bool ApplyRole(
+            DeckRoleViewModel deckRoleViewModel,
+            AppliedBySource source,
+            RolesAndTagsReport statusReport = null)
         {
             var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
@@ -246,10 +279,17 @@ namespace EdhDeckBuilder.ViewModel
 
             _appliedBySourceOverride = source;
             roleVm.Applies = true;
+
+            if (statusReport != null)
+                statusReport.AddRoleUpdateEvent($"Added {roleVm.Name} role to {Name}.");
+
             return true;
         }
 
-        public bool UnapplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
+        public bool UnapplyRole(
+            DeckRoleViewModel deckRoleViewModel,
+            AppliedBySource source,
+            RolesAndTagsReport statusReport = null)
         {
             var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
@@ -257,6 +297,10 @@ namespace EdhDeckBuilder.ViewModel
 
             _appliedBySourceOverride = source;
             roleVm.Applies = false;
+
+            if (statusReport != null)
+                statusReport.AddRoleUpdateEvent($"Removed {roleVm.Name} from {Name}.");
+
             return true;
         }
 

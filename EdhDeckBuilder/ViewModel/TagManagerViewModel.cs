@@ -84,11 +84,11 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _status, value); }
         }
 
-        private string _errors;
-        public string Errors
+        private string _log;
+        public string Log
         {
-            get { return _errors; }
-            set { SetProperty(ref _errors, value); }
+            get { return _log; }
+            set { SetProperty(ref _log, value); }
         }
 
         private string _filterInput;
@@ -233,6 +233,7 @@ namespace EdhDeckBuilder.ViewModel
         {
             Title = title;
             Status = "Idle";
+            Log = string.Empty;
             CanRetrieve = true;
             _deck = deck;
             _cardProvider = cardProvider;
@@ -346,10 +347,14 @@ namespace EdhDeckBuilder.ViewModel
 
             Status = "Updating tags and roles...";
 
-            var status = await _deckBuilderVm.UpdateRolesWithTags(DeckRoleVms.ToList(),
-            _fullUpdateList, new CancellationTokenSource(), OverrideExistingData);
+            var statusReport = await _deckBuilderVm.UpdateRolesWithTags(
+                DeckRoleVms.ToList(),
+                _fullUpdateList,
+                new CancellationTokenSource(),
+                OverrideExistingData);
 
-            Status = status;
+            Status = statusReport.Summary();
+            Log += statusReport.ToString();
         }
 
         public void AddTagToRole()
@@ -695,7 +700,7 @@ namespace EdhDeckBuilder.ViewModel
             var tagsDictionary = scryfallTagsResult.Item1;
             var errors = scryfallTagsResult.Item2;
             Status = "Tags retrieved. Compiling summary...";
-            Errors = $"Errors:\n{string.Join("\n", errors)}";
+            Log += $"Errors:\n{string.Join("\n", errors)}";
             TagSummaryVms = await Task.Run(() => CompileTagsSummary(tagsDictionary));
             _fullTagsList = TagSummaryVms.ToList();
             RaisePropertyChanged(nameof(TagSummaryVms));

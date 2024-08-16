@@ -613,16 +613,15 @@ namespace EdhDeckBuilder.ViewModel
         /// </summary>
         /// <param name="rolesWithTags"></param>
         /// <param name="cts"></param>
-        public async Task<string> UpdateRolesWithTags(
+        public async Task<RolesAndTagsReport> UpdateRolesWithTags(
             List<DeckRoleViewModel> rolesWithTags,
             List<string> cardsToUpdate,
             CancellationTokenSource cts,
             bool overrideExistingRoleValues = false)
         {
-            var statusReport = string.Empty;
+            var statusReport = new RolesAndTagsReport();
 
             // Update headers if role name changed.
-            var renamedRoleCount = 0;
             foreach (var renamedRole in rolesWithTags.Where(roleWithTags => roleWithTags.Renamed()))
             {
                 var headerToUpdate = TemplateVms
@@ -630,12 +629,11 @@ namespace EdhDeckBuilder.ViewModel
 
                 if (headerToUpdate != null)
                 {
+                    statusReport.AddRenamedRoleEvent($"Renamed {headerToUpdate.Role} role to " +
+                        $"{renamedRole.Name}");
                     headerToUpdate.Role = renamedRole.Name;
-                    renamedRoleCount++;
                 }
             }
-
-            if (renamedRoleCount > 0) statusReport += $"Renamed {renamedRoleCount} role(s). ";
 
             var updatedCardCount = 0;
             var updatedRoleCount = 0;
@@ -648,16 +646,12 @@ namespace EdhDeckBuilder.ViewModel
                 var modelWithUpdatedTags = await _cardProvider.TryGetCardModelAsync(cardVm.Name, cts);
 
                 // Update card vm's Scryfall tags.
-                var scryfallTagsUpdated = cardVm.UpdateScryfallTags(modelWithUpdatedTags.ScryfallTags);
+                var scryfallTagsUpdated = cardVm.UpdateScryfallTags(modelWithUpdatedTags.ScryfallTags,
+                    statusReport);
 
                 var allTags = modelWithUpdatedTags.ScryfallTags
                     .Union(modelWithUpdatedTags.AllTypes
                     .Select((type) => _cardProvider.GetTagNameForType(type)));
-
-                if (scryfallTagsUpdated)
-                {
-                    updatedCardCount++;
-                }
 
                 foreach (var roleWithTags in rolesWithTags)
                 {
@@ -672,36 +666,16 @@ namespace EdhDeckBuilder.ViewModel
 
                     // Permitted to update role. Check if role applies or not, and update accordingly.
                     var roleUpdated = false;
-                    if (cardHasTagsAssociatedWithRole) roleUpdated = cardVm.ApplyRole(roleWithTags, AppliedBySource.ScryfallTag);
-                    else roleUpdated = cardVm.UnapplyRole(roleWithTags, AppliedBySource.ScryfallTag);
+                    if (cardHasTagsAssociatedWithRole) roleUpdated = cardVm.ApplyRole(roleWithTags, AppliedBySource.ScryfallTag, statusReport);
+                    else roleUpdated = cardVm.UnapplyRole(roleWithTags, AppliedBySource.ScryfallTag, statusReport);
 
-                    if (roleUpdated)
-                    {
-                        UpdateRoleHeaders(cardVm);
-                        updatedRoleCount++;
-
-                        if (updatedRoleCount == 1)
-                        {
-                            singleRoleUpdateCard = $"{roleWithTags.Name} updated for {cardVm.Name}";
-                        }
-                    }
-                }
-            }
-
-            if (updatedCardCount > 0)
-            {
-                statusReport += $"Updated Scryfall tags for {updatedCardCount} card(s). ";
-
-                if (updatedRoleCount > 0)
-                {
-                    if (updatedRoleCount == 1) statusReport += $"{singleRoleUpdateCard}.";
-                    else statusReport += $"Updated {updatedRoleCount} role values across all cards.";
+                    UpdateRoleHeaders(cardVm);
                 }
             }
 
             _roleAndTagGroupings = rolesWithTags;
-            if (string.IsNullOrEmpty(statusReport)) return "All cards already up-to-date. No actions taken.";
-            return $"Update successful. {statusReport}";
+
+            return statusReport;
         }
 
         public void DecklistDiff()
