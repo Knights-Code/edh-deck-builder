@@ -183,10 +183,18 @@ namespace EdhDeckBuilder.ViewModel
             };
         }
 
-        public void UpdateScryfallTags(List<string> newTags)
+        public bool UpdateScryfallTags(List<string> newTags)
         {
+            if (newTags.All(ScryfallTags.Contains) &&
+                ScryfallTags.All(newTags.Contains))
+            {
+                // New tag list is identical to current tag list.
+                return false;
+            }
+
             ScryfallTags = new ObservableCollection<string>(newTags);
             RaisePropertyChanged(nameof(HasScryfallTags));
+            return true;
         }
 
         private void CreateDefaultRoleVms()
@@ -230,24 +238,26 @@ namespace EdhDeckBuilder.ViewModel
             RoleUpdated.Invoke(new RoleUpdatedSenders { CardVm = this, RoleVm = sender as RoleViewModel }, e);
         }
 
-        public void ApplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
+        public bool ApplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
         {
             var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
-            if (roleVm == null || roleVm.Applies) return;
+            if (roleVm == null || roleVm.Applies) return false;
 
             _appliedBySourceOverride = source;
             roleVm.Applies = true;
+            return true;
         }
 
-        public void UnapplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
+        public bool UnapplyRole(DeckRoleViewModel deckRoleViewModel, AppliedBySource source)
         {
             var roleVm = RoleVms.FirstOrDefault((rVm) => rVm.Name == deckRoleViewModel.Name);
 
-            if (roleVm == null || !roleVm.Applies) return;
+            if (roleVm == null || !roleVm.Applies) return false;
 
             _appliedBySourceOverride = source;
             roleVm.Applies = false;
+            return true;
         }
 
         public bool CanUseTagsToUpdateRole(string roleName)

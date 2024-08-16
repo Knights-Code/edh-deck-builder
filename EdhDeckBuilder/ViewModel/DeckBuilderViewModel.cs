@@ -639,6 +639,7 @@ namespace EdhDeckBuilder.ViewModel
 
             var updatedCardCount = 0;
             var updatedRoleCount = 0;
+            var singleRoleUpdateCard = string.Empty;
             foreach (var cardVm in CardVms)
             {
                 if (!cardsToUpdate.Contains(cardVm.Name)) continue;
@@ -647,13 +648,16 @@ namespace EdhDeckBuilder.ViewModel
                 var modelWithUpdatedTags = await _cardProvider.TryGetCardModelAsync(cardVm.Name, cts);
 
                 // Update card vm's Scryfall tags.
-                cardVm.UpdateScryfallTags(modelWithUpdatedTags.ScryfallTags);
+                var scryfallTagsUpdated = cardVm.UpdateScryfallTags(modelWithUpdatedTags.ScryfallTags);
 
                 var allTags = modelWithUpdatedTags.ScryfallTags
                     .Union(modelWithUpdatedTags.AllTypes
                     .Select((type) => _cardProvider.GetTagNameForType(type)));
 
-                updatedCardCount++;
+                if (scryfallTagsUpdated)
+                {
+                    updatedCardCount++;
+                }
 
                 foreach (var roleWithTags in rolesWithTags)
                 {
@@ -667,12 +671,20 @@ namespace EdhDeckBuilder.ViewModel
                     if (!overrideExistingRoleValues && !cardVm.CanUseTagsToUpdateRole(roleWithTags.Name)) continue;
 
                     // Permitted to update role. Check if role applies or not, and update accordingly.
-                    if (cardHasTagsAssociatedWithRole) cardVm.ApplyRole(roleWithTags, AppliedBySource.ScryfallTag);
-                    else cardVm.UnapplyRole(roleWithTags, AppliedBySource.ScryfallTag);
+                    var roleUpdated = false;
+                    if (cardHasTagsAssociatedWithRole) roleUpdated = cardVm.ApplyRole(roleWithTags, AppliedBySource.ScryfallTag);
+                    else roleUpdated = cardVm.UnapplyRole(roleWithTags, AppliedBySource.ScryfallTag);
 
-                    UpdateRoleHeaders(cardVm);
+                    if (roleUpdated)
+                    {
+                        UpdateRoleHeaders(cardVm);
+                        updatedRoleCount++;
 
-                    updatedRoleCount++;
+                        if (updatedRoleCount == 1)
+                        {
+                            singleRoleUpdateCard = $"{roleWithTags.Name} updated for {cardVm.Name}";
+                        }
+                    }
                 }
             }
 
@@ -682,11 +694,13 @@ namespace EdhDeckBuilder.ViewModel
 
                 if (updatedRoleCount > 0)
                 {
-                    statusReport += $"Updated {updatedRoleCount} role values across all cards.";
+                    if (updatedRoleCount == 1) statusReport += $"{singleRoleUpdateCard}.";
+                    else statusReport += $"Updated {updatedRoleCount} role values across all cards.";
                 }
             }
 
             _roleAndTagGroupings = rolesWithTags;
+            if (string.IsNullOrEmpty(statusReport)) return "All cards already up-to-date. No actions taken.";
             return $"Update successful. {statusReport}";
         }
 
