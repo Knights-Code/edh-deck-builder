@@ -181,6 +181,27 @@ namespace EdhDeckBuilder.ViewModel
             set { SetProperty(ref _selectedUpdateIndex, value); }
         }
 
+        private FilterMode _cardsFilterMode;
+        public FilterMode CardsFilterMode
+        {
+            get { return _cardsFilterMode; }
+            set
+            {
+                if (SetProperty(ref _cardsFilterMode, value))
+                {
+                    RaisePropertyChanged(nameof(IsNameFilterChecked));
+                    RaisePropertyChanged(nameof(IsTagFilterChecked));
+                    RaisePropertyChanged(nameof(IsRoleFilterChecked));
+                }
+            }
+        }
+
+        public bool IsNameFilterChecked => CardsFilterMode == FilterMode.ByName;
+
+        public bool IsTagFilterChecked => CardsFilterMode == FilterMode.ByTag;
+
+        public bool IsRoleFilterChecked => CardsFilterMode == FilterMode.ByRole;
+
         public ICommand RetrieveCommand { get; set; }
         public ICommand ResetFilterCommand { get; set; }
         public ICommand RemoveTagFromRoleCommand { get; set; }
@@ -191,6 +212,7 @@ namespace EdhDeckBuilder.ViewModel
         public ICommand MoveAllFromIgnoreToUpdateCommand { get; set; }
         public ICommand MoveAllFromUpdateToIgnoreCommand { get; set; }
         public ICommand MoveSelectedFromUpdateToIgnoreCommand { get; set; }
+        public ICommand ChangeFilterModeCommand { get; set; }
 
         private List<TagSummaryViewModel> _fullTagsList;
         private List<string> _fullIgnoreList;
@@ -227,6 +249,8 @@ namespace EdhDeckBuilder.ViewModel
             AddTagToRoleCommand = new DelegateCommand(AddTagToRole);
             RemoveTagFromRoleCommand = new DelegateCommand(RemoveTagFromRole);
             UpdateRolesInDeckCommand = new DelegateCommand(UpdateRolesInDeck);
+            ChangeFilterModeCommand = new DelegateCommand<string>(ChangeFilterMode);
+
             ResetCardsFilterCommand = new DelegateCommand(ResetCardsFilter,
                 () => !string.IsNullOrEmpty(FilterCardsInput));
             MoveSelectedFromIgnoreToUpdateCommand = new DelegateCommand(MoveSelectedToUpdate,
@@ -245,6 +269,34 @@ namespace EdhDeckBuilder.ViewModel
                 .OrderBy(name => name));
             _fullUpdateList = CardsToUpdate.ToList();
             CardsToIgnore = new ObservableCollection<string>();
+            CardsFilterMode = FilterMode.ByName;
+        }
+
+        public void ChangeFilterMode(string newMode)
+        {
+            var modeChanged = false;
+
+            switch (newMode)
+            {
+                case "ByName":
+                    modeChanged = CardsFilterMode != FilterMode.ByName;
+                    CardsFilterMode = FilterMode.ByName;
+                    break;
+                case "ByTag":
+                    modeChanged = CardsFilterMode != FilterMode.ByTag;
+                    CardsFilterMode = FilterMode.ByTag;
+                    break;
+                case "ByRole":
+                    modeChanged = CardsFilterMode != FilterMode.ByRole;
+                    CardsFilterMode = FilterMode.ByRole;
+                    break;
+            }
+
+            // Filter using new mode.
+            if (modeChanged)
+            {
+                StartOrRestartFilterCards(FilterCardsInput);
+            }
         }
 
         public async void UpdateRolesInDeck()
@@ -468,8 +520,15 @@ namespace EdhDeckBuilder.ViewModel
             }
 
             _filterCardsCancel = new CancellationTokenSource();
-            _filterCardsTask = FilterCardsAsync(filterText, ShouldFilterCardsByTag, _filterCardsCancel);
+            _filterCardsTask = FilterCardsAsync(filterText, CardsFilterMode, _filterCardsCancel);
             await _filterCardsTask;
+        }
+
+        public enum FilterMode
+        {
+            ByName,
+            ByTag,
+            ByRole,
         }
 
         /// <summary>
@@ -477,15 +536,16 @@ namespace EdhDeckBuilder.ViewModel
         /// based on provided filter text and checkbox value.
         /// </summary>
         /// <param name="filterText">The search term.</param>
-        /// <param name="shouldFilterByTags">If true, filters by tags on card instead of card's name.</param>
+        /// <param name="filterMode">An enum determining whether to filter by card name,
+        /// card tag, or roles assigned to card.</param>
         /// <param name="cancellationTokenSource"></param>
         /// <returns>An awaitable Task for the function.</returns>
         public async Task FilterCardsAsync(
             string filterText,
-            bool shouldFilterByTags,
+            FilterMode filterMode,
             CancellationTokenSource cancellationTokenSource)
         {
-            if (shouldFilterByTags &&
+            if (filterMode == FilterMode.ByTag &&
                 !_deckBuilderVm.CardVms.Any((cardVm) => cardVm.HasScryfallTags))
             {
                 // User has opted to filter by tags, but none
@@ -503,63 +563,67 @@ namespace EdhDeckBuilder.ViewModel
 
             await Task.Run(() =>
             {
-                if (!shouldFilterByTags)
+                switch (filterMode)
                 {
-                    filteredIgnoreList = _fullIgnoreList
-                        .Where(cardName => cardName.ToLower().Contains(filterText.ToLower()))
-                        .ToList();
-                    filteredUpdateList = _fullUpdateList
-                        .Where(cardName => cardName.ToLower().Contains(filterText.ToLower()))
-                        .ToList();
-                }
-                else
-                {
-                    if (string.IsNullOrEmpty(FilterCardsInput))
-                    {
-                        // If the filter field is empty, simply reset
-                        // the lists to full.
-                        filteredIgnoreList = _fullIgnoreList;
-                        filteredUpdateList = _fullUpdateList;
-                    }
-                    else
-                    {
-                        // For each card in each list, check if it has any tags that match the
-                        // filter text.
-                        foreach (var cardName in _fullIgnoreList)
+                    case FilterMode.ByName:
+                        filteredIgnoreList = _fullIgnoreList
+                            .Where(cardName => cardName.ToLower().Contains(filterText.ToLower()))
+                            .ToList();
+                        filteredUpdateList = _fullUpdateList
+                            .Where(cardName => cardName.ToLower().Contains(filterText.ToLower()))
+                            .ToList();
+                        break;
+                    case FilterMode.ByTag:
+                        if (string.IsNullOrEmpty(FilterCardsInput))
                         {
+                            // If the filter field is empty, simply reset
+                            // the lists to full.
+                            filteredIgnoreList = _fullIgnoreList;
+                            filteredUpdateList = _fullUpdateList;
+                        }
+                        else
+                        {
+                            // For each card in each list, check if it has any tags that match the
+                            // filter text.
+                            foreach (var cardName in _fullIgnoreList)
+                            {
+                                if (cancellationTokenSource.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+
+                                var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
+
+                                if (!cardVm.AllTags.Any()) continue;
+
+                                if (cardVm.AllTags.Any(tag => tag.ToLower() == filterText.ToLower()))
+                                    filteredIgnoreList.Add(cardName);
+                            }
+
                             if (cancellationTokenSource.IsCancellationRequested)
                             {
                                 return;
                             }
 
-                            var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
-
-                            if (!cardVm.AllTags.Any()) continue;
-
-                            if (cardVm.AllTags.Any(tag => tag.ToLower() == filterText.ToLower()))
-                                filteredIgnoreList.Add(cardName);
-                        }
-
-                        if (cancellationTokenSource.IsCancellationRequested)
-                        {
-                            return;
-                        }
-
-                        foreach (var cardName in _fullUpdateList)
-                        {
-                            if (cancellationTokenSource.IsCancellationRequested)
+                            foreach (var cardName in _fullUpdateList)
                             {
-                                return;
+                                if (cancellationTokenSource.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+
+                                var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
+
+                                if (!cardVm.AllTags.Any()) continue;
+
+                                if (cardVm.AllTags.Any(tag => tag.ToLower() == filterText.ToLower()))
+                                    filteredUpdateList.Add(cardName);
                             }
-
-                            var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
-
-                            if (!cardVm.AllTags.Any()) continue;
-
-                            if (cardVm.AllTags.Any(tag => tag.ToLower() == filterText.ToLower()))
-                                filteredUpdateList.Add(cardName);
                         }
-                    }
+                        break;
+                    case FilterMode.ByRole:
+                        MessageBox.Show("This feature is Coming Soon!", "Coming Soon");
+                        break;
                 }
             });
 
