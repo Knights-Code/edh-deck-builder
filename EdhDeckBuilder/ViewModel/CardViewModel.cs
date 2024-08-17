@@ -124,16 +124,6 @@ namespace EdhDeckBuilder.ViewModel
 
             if (model.Roles.Any())
             {
-                // If this card loaded its roles from the role DB,
-                // only the roles that apply will get an applied by source
-                // of "RoleDb". Instead, if any role data was loaded at all,
-                // we can set the source to RoleDb for all role VMs on the
-                // card.
-                foreach (var roleVm in _roleVms)
-                {
-                    roleVm.SetAppliedBySource(AppliedBySource.RoleDb);
-                }
-
                 foreach (var roleModel in model.Roles)
                 {
                     var roleVm = _roleVms.FirstOrDefault(vm => vm.Name == roleModel.Name);
@@ -143,14 +133,12 @@ namespace EdhDeckBuilder.ViewModel
                     if (roleRankings != null)
                     {
                         var rankingForRole = roleRankings.FirstOrDefault(rr => rr.Name == roleVm.Name);
-                        var roleTagsIncluded = false;
 
                         if (rankingForRole != null) roleVm.UpdateValueSilently(rankingForRole.Value);
                     }
 
-                    if (!roleModel.Applies) continue;
-
-                    roleVm.ApplySilently(AppliedBySource.RoleDb);
+                    if (roleModel.Applies) roleVm.ApplySilently(AppliedBySource.RoleDb);
+                    else roleVm.UnapplySilently(AppliedBySource.RoleDb);
                 }
             }
 

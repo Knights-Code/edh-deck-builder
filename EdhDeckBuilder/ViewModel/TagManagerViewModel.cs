@@ -627,7 +627,58 @@ namespace EdhDeckBuilder.ViewModel
                         }
                         break;
                     case FilterMode.ByRole:
-                        MessageBox.Show("This feature is Coming Soon!", "Coming Soon");
+                        if (string.IsNullOrEmpty(FilterCardsInput))
+                        {
+                            // If the filter field is empty, simply reset
+                            // the lists to full.
+                            filteredIgnoreList = _fullIgnoreList;
+                            filteredUpdateList = _fullUpdateList;
+                        }
+                        else
+                        {
+                            // For each card in each list, check if it has any applied roles that match the
+                            // filter text.
+                            foreach (var cardName in _fullIgnoreList)
+                            {
+                                if (cancellationTokenSource.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+
+                                var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
+
+                                if (!cardVm.RoleVms.Any(rVm => rVm.Applies)) continue;
+
+                                if (cardVm.RoleVms.Any(rVm =>
+                                    rVm.Applies && rVm.Name.ToLower() == filterText.ToLower()))
+                                {
+                                    filteredIgnoreList.Add(cardName);
+                                }
+                            }
+
+                            if (cancellationTokenSource.IsCancellationRequested)
+                            {
+                                return;
+                            }
+
+                            foreach (var cardName in _fullUpdateList)
+                            {
+                                if (cancellationTokenSource.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+
+                                var cardVm = _deckBuilderVm.CardVms.First(cVm => cVm.Name == cardName);
+
+                                if (!cardVm.RoleVms.Any(rVm => rVm.Applies)) continue;
+
+                                if (cardVm.RoleVms.Any(rVm =>
+                                    rVm.Applies && rVm.Name.ToLower() == filterText.ToLower()))
+                                {
+                                    filteredUpdateList.Add(cardName);
+                                }
+                            }
+                        }
                         break;
                 }
             });

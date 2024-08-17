@@ -8,9 +8,9 @@ namespace EdhDeckBuilder.Model
 {
     public class RoleModel
     {
-        public string Name { get; private set; }
-        public int Value { get; private set; }
-        public bool Applies { get; private set; }
+        public string Name { get; set; }
+        public int Value { get; set; }
+        public bool Applies { get; set; }
 
         public RoleModel(string name, int value = 1, bool applies = true)
         {
@@ -19,5 +19,7 @@ namespace EdhDeckBuilder.Model
             Value = value;
             Applies = applies;
         }
+
+        public RoleModel() { }
     }
 }
