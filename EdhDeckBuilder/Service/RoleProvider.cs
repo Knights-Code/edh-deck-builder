@@ -62,15 +62,16 @@ namespace EdhDeckBuilder.Service
                     {
                         // If there's any string value in the cell, the role applies
                         // to the card.
-                        if (string.IsNullOrEmpty(fields[i]))
+                        var role = new RoleModel
                         {
-                            continue;
-                        }
+                            Name = _roleHeaders[i],
+                            Applies = !string.IsNullOrEmpty(fields[i])
+                        };
 
-                        roles.Add(new RoleModel(_roleHeaders[i]));
+                        roles.Add(role);
                     }
 
-                    if (roles.Any()) _rolesByCardName[cardName] = roles;
+                    _rolesByCardName[cardName] = roles;
                 }
             }
 
