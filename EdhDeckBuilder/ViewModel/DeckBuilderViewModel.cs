@@ -434,7 +434,8 @@ namespace EdhDeckBuilder.ViewModel
 
             foreach (var cardModel in cardModels)
             {
-                var deckModelCard = manifest.First((deckCardModel) => deckCardModel.Name == cardModel.Name);
+                var deckModelCard = manifest.First(
+                    (manifestCardModel) => manifestCardModel.Name.ToLower() == cardModel.Name.ToLower());
                 var numCopies = deckModelCard.NumCopies;
                 var roles = deckModelCard.Roles;
 
