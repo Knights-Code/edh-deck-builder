@@ -47,8 +47,19 @@ namespace EdhDeckBuilder.ViewModel
         public async void MaybeUpdateCardImagesAsync(CardViewModel cardVm)
         {
             if (cardVm.ImagesLoaded) return;
+            Tuple<Image, Image> imageTuple = null;
 
-            var imageTuple = await _cardProvider.GetCardImagesAsync(cardVm.Name, new CancellationTokenSource());
+            try
+            {
+                imageTuple = await _cardProvider.GetCardImagesAsync(cardVm.Name, new CancellationTokenSource());
+            }
+            catch (TaskCanceledException)
+            {
+                // When on a dodgy internet connection this exception
+                // is thrown sometimes.
+                return;
+            }
+
             var frontImage = imageTuple.Item1;
             var backImage = imageTuple.Item2;
 
@@ -422,6 +433,8 @@ namespace EdhDeckBuilder.ViewModel
 
                 SettingsProvider.UpdateDeckFilePath(deckPath);
             }
+
+            RaisePropertyChanged(nameof(CardVms));
         }
 
         public async Task<List<CreateCardStub>> LoadCardsForDeckAsync(List<CardModel> manifest)
@@ -728,11 +741,16 @@ namespace EdhDeckBuilder.ViewModel
 
         }
 
+        private const string SORT_NO_ROLES_CODE = "[sort-no-roles-to-top]";
+
         private string GetHighlightedRole()
         {
-            if (TemplateVms.Count(vm => vm.Highlighted) != 1) return null;
+            if (TemplateVms.Count(vm => vm.Highlighted) > 1) return null;
 
-            return TemplateVms.First(vm => vm.Highlighted).Role;
+            if (TemplateVms.Count(vm => vm.Highlighted) == 1)
+                return TemplateVms.First(vm => vm.Highlighted).Role;
+
+            return SORT_NO_ROLES_CODE; // Used for sorting cards with no roles to top.
         }
 
         public void RoleRankings()
@@ -781,14 +799,26 @@ namespace EdhDeckBuilder.ViewModel
 
         public void SortByRole()
         {
-            // Only sort if exactly 1 role is highlighted.
+            // Only sort if 1 or 0 roles are highlighted.
             if (!CanSortByRole()) return;
 
             // Put all cards with role at top of list, then order them by
             // role ranking in ascending order. Put all other cards after.
             var list = new List<CardViewModel>(CardVms);
 
-            CardVms = new ObservableCollection<CardViewModel>(list.OrderBy(card => card.RoleVms.FirstOrDefault(role => role.Name == GetHighlightedRole() && role.Applies)?.Value ?? 100));
+            // If the highlighted role is the "sort no roles" code,
+            // sort cards by the number of roles they have.
+            if (GetHighlightedRole() == SORT_NO_ROLES_CODE)
+            {
+                CardVms = new ObservableCollection<CardViewModel>(list
+                    .OrderBy(card => card.RoleVms.Count(role => role.Applies)));
+            }
+            else
+            {
+                CardVms = new ObservableCollection<CardViewModel>(list
+                    .OrderBy(card => card.RoleVms
+                    .FirstOrDefault(role => role.Name == GetHighlightedRole() && role.Applies)?.Value ?? 100));
+            }
         }
 
         public DeckModel ToModel()

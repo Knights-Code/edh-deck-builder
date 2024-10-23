@@ -553,6 +553,12 @@ namespace EdhDeckBuilder.Service
                 // Unable to connect but it might just be a bad URL.
                 // Do nothing.
             }
+            catch (TaskCanceledException)
+            {
+                // Similar to a HttpRequestException, on slow
+                // connections the GetByteArrayAsync can throw this
+                // exception.
+            }
 
             return image;
         }
