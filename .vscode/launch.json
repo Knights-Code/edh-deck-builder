@@ -9,7 +9,8 @@
       "args": [],
       "cwd": "${workspaceFolder}/TestHarness/bin/Debug",
       "stopAtEntry": false,
-      "console": "internalConsole"
+      "console": "internalConsole",
+      "justMyCode": false
     }
   ]
 }
