@@ -426,6 +426,9 @@ namespace EdhDeckBuilder.ViewModel
                     if (cardRoles != null)
                     {
                         cardStub.CardModel.Roles.AddRange(cardRoles);
+                    } else if (cardStub.Roles != null)
+                    {
+                        cardStub.CardModel.Roles.AddRange(cardStub.Roles);
                     }
 
                     AddCard(cardStub.CardModel, cardStub.NumCopies, cardStub.Roles, deckModel.CustomRoles, true);
