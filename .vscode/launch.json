@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Test Harness (Debug)",
+      "type": "clr",
+      "request": "launch",
+      "program": "${workspaceFolder}/TestHarness/bin/Debug/TestHarness.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/TestHarness/bin/Debug",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}
