@@ -77,7 +77,9 @@ namespace EdhDeckBuilder.Service
                 new CancellationTokenSource()).ConfigureAwait(false);
 
             // Initialise database.
-            _cardIdentifiersPath = @"C:\Users\pugtu\Documents\Games\Magic The Gathering\CSVCardDatabase\cardIdentifiers.csv";
+            // TODO: Manage this in settings or an environment variable instead
+            // of hard-coding it.
+            _cardIdentifiersPath = @"C:\Users\pugtu\AppData\Roaming\Forge\decks\edh-deck-builder\card-database\cardIdentifiers.csv";
 
             // Construct map of multiverse IDs by card UUID.
             using (var csvParser = new TextFieldParser(_cardIdentifiersPath))
@@ -103,7 +105,9 @@ namespace EdhDeckBuilder.Service
                 }
             }
 
-            _cardDataPath = @"C:\Users\pugtu\Documents\Games\Magic The Gathering\CSVCardDatabase\cards.csv";
+            // TODO: Manage this in settings or an environment variable instead
+            // of hard-coding it.
+            _cardDataPath = @"C:\Users\pugtu\AppData\Roaming\Forge\decks\edh-deck-builder\card-database\cards.csv";
 
             using (var csvParser = new TextFieldParser(_cardDataPath))
             {

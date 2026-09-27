@@ -26,7 +26,11 @@ namespace Scryscraper
             if (_initialised) return;
 
             if (string.IsNullOrEmpty(_scryfallTagsFilePath))
-                _scryfallTagsFilePath = @"C:\Users\pugtu\Documents\Games\Magic The Gathering\ScryfallTagsDatabase\scryfall_tags.csv";
+            {
+                // TODO: Manage this in settings or an environment variable instead
+                // of hard-coding it.
+                _scryfallTagsFilePath = @"C:\Users\pugtu\AppData\Roaming\Forge\decks\edh-deck-builder\scryfall-tags-database\scryfall_tags.csv";
+            }
 
             await Task.Run(() =>
             {
